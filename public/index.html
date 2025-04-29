@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>$YUMI Official Litepaper - Web3 Layout with Game Link</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>$YUMI Official Litepaper - Video Intro</title> <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
@@ -15,6 +14,7 @@
             background-color: var(--bg-dark-primary);
             color: var(--text-light-primary);
             overflow-x: hidden; /* Prevent horizontal scroll */
+            margin: 0; /* Ensure no default body margin */
         }
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Rajdhani', sans-serif;
@@ -22,27 +22,22 @@
 
         /* Dark Theme Colors */
         :root {
-            --bg-dark-primary: #12121f; /* Slightly darker primary */
-            --bg-dark-secondary: #1a1a2e; /* Existing secondary */
-            --bg-dark-tertiary: #16213e; /* Existing tertiary */
-            --bg-dark-card: #1f1f38; /* Background for cards/sections */
+            --bg-dark-primary: #0a0a14; /* Even darker primary */
+            --bg-dark-secondary: #1a1a2e;
+            --bg-dark-tertiary: #16213e;
+            --bg-dark-card: #1f1f38;
             --text-light-primary: #e0e0e0;
             --text-light-secondary: #a0a0c0;
             --border-color: #4a4a6a;
-            --border-color-light: #2a2a4a; /* Lighter border for internal elements */
-        }
-        
-        /* Comic Viewer Styling */
-        #comic-viewer {
-            padding: 4rem 0;
-            border-top: 1px solid var(--border-color);
-        }
-        .comic-panel-container {
-            display: flex;
-            justify-content: center;
+            --border-color-light: #2a2a4a;
+            --core-color-start: hsl(185, 90%, 70%); /* Brighter Cyan */
+            --core-color-mid: hsl(220, 90%, 70%); /* Bright Blue */
+            --core-color-end: hsl(265, 90%, 75%); /* Brighter Purple */
+            --planet-color: hsl(325, 90%, 65%); /* Brighter Pinkish */
+            --spark-color: #ffffff;
         }
 
-        /* --- Animated Hue Effect (Same as before) --- */
+        /* --- Animated Hue Effect (For Main Page & Intro Logo) --- */
         @keyframes hue-rotate-animation {
             0% { color: hsl(145, 70%, 55%); } 25% { color: hsl(185, 70%, 55%); }
             50% { color: hsl(265, 70%, 65%); } 75% { color: hsl(325, 70%, 60%); }
@@ -70,729 +65,840 @@
              50% { fill: hsl(265, 70%, 65%); } 75% { fill: hsl(325, 70%, 60%); }
              100% { fill: hsl(145, 70%, 55%); }
         }
-        #comicPanel {
-            max-width: 100%;
-            height: auto;
-            max-height: 500px;
-        }
-        #prevPage, #nextPage {
-            background-color: var(--bg-dark-card);
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            opacity: 0.8;
-        }
-        #prevPage:hover, #nextPage:hover { opacity: 1; }
         @keyframes hue-rotate-bg-color-animation {
              0% { background-color: hsl(145, 70%, 55%); } 25% { background-color: hsl(185, 70%, 55%); }
              50% { background-color: hsl(265, 70%, 65%); } 75% { background-color: hsl(325, 70%, 60%); }
              100% { background-color: hsl(145, 70%, 55%); }
         }
 
-
-        /* Apply animation to elements */
-        .animated-accent-text, .accent-text {
-            animation: hue-rotate-animation 6s linear infinite;
-            font-weight: 600;
+        /* --- Intro Screen Styles --- */
+        #intro-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh; /* Use vh for full viewport height */
+            background-color: var(--bg-dark-primary);
+            overflow: hidden;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+            display: flex; /* Use flexbox for centering title */
+            justify-content: center;
+            align-items: center;
         }
-        .animated-accent-border {
-             border-left-width: 4px; border-left-style: solid;
-             animation: hue-rotate-border-animation 6s linear infinite;
-        }
-         .animated-accent-border-all { /* Apply animated border to all sides */
-             border-width: 2px; border-style: solid;
-             animation: hue-rotate-border-animation 6s linear infinite;
-         }
-        .animated-accent-bg-border {
-             animation: hue-rotate-background-animation 6s linear infinite, hue-rotate-border-animation 6s linear infinite;
-             border-left-width: 3px; border-left-style: solid;
-        }
-        .animated-accent-fill path { /* Target SVG paths */
-             animation: hue-rotate-fill-animation 6s linear infinite;
-        }
-        .animated-accent-bg { /* Animated background color */
-             animation: hue-rotate-bg-color-animation 6s linear infinite;
-        }
-        .animated-accent-shadow { /* Animated box/text shadow */
-            animation: hue-rotate-shadow-animation 6s linear infinite;
+        #intro-page.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
+        /* Background Video */
+        #intro-video-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cover the screen, may crop */
+            transform: translate(-50%, -50%);
+            z-index: 0; /* Behind everything else */
+            opacity: 0.5; /* Optional: make it slightly transparent */
+            filter: brightness(0.7); /* Optional: darken video */
+        }
 
-        /* --- Layout Structure --- */
-        .content-wrapper {
-            max-width: 1100px; /* Wider max-width for modern layout */
-            margin: 0 auto;
-            padding: 0 1rem; /* Padding on sides */
-        }
-        section {
-            padding: 4rem 0; /* Vertical padding for sections */
-            border-bottom: 1px solid var(--border-color-light);
-        }
-        section:last-of-type {
-            border-bottom: none;
+        #starfield {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* Above video, below title */
+            background: transparent;
+            pointer-events: none; /* Allow clicks through */
         }
 
-        /* --- Header / Hero Section --- */
-        .hero-section {
+        /* Title Screen */
+        #title-screen {
+            position: relative; /* Position relative to flex container */
             text-align: center;
-            padding: 6rem 0 4rem 0; /* More padding top */
-            background: linear-gradient(180deg, var(--bg-dark-secondary) 0%, var(--bg-dark-primary) 100%);
+            z-index: 4; /* Above video and starfield */
+            opacity: 0;
+            animation: title-fade-in 2s ease-out 0.5s forwards; /* Fade in title earlier */
+            background: rgba(10, 10, 20, 0.5); /* Slightly darker semi-transparent background */
+            padding: 2rem 3rem;
+            border-radius: 15px;
+            backdrop-filter: blur(5px); /* Blur effect */
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .hero-section h1 {
-            font-size: 3rem; /* text-5xl */
-            line-height: 1.2;
-            margin-bottom: 1rem; /* mb-4 */
-            animation: hue-rotate-animation 6s linear infinite, hue-rotate-shadow-animation 6s linear infinite;
-        }
-        .hero-section .subtitle {
-             font-size: 1.25rem; /* text-xl */
-             margin-bottom: 2rem; /* mb-8 */
-             animation: hue-rotate-animation 6s linear infinite;
-             font-weight: 500;
-        }
-         .hero-section p {
-             max-width: 700px;
-             margin-left: auto;
-             margin-right: auto;
-             color: var(--text-light-secondary);
-             font-size: 1.125rem; /* text-lg */
-             line-height: 1.8;
-         }
-
-
-        /* --- General Section Styling --- */
-        h2 {
-            font-size: 2.25rem; /* text-4xl */
+        /* $YUMI Logo Name */
+        .intro-logo-name {
+            font-size: clamp(1.5rem, 4vw, 2.5rem); /* Responsive size */
             font-weight: 700;
-            margin-bottom: 2rem; /* mb-8 */
-            text-align: center;
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+            /* Apply hue animation */
             animation: hue-rotate-animation 6s linear infinite;
+            text-shadow: 0 0 5px currentColor; /* Add subtle matching glow */
         }
-        h3 {
-            font-size: 1.5rem; /* text-2xl */
+        #title-screen h1 { /* "The Last Spark" */
+            font-family: 'Rajdhani', sans-serif;
+            font-size: clamp(2.5rem, 8vw, 5rem); /* Responsive font size */
+            font-weight: 700;
+            color: #fff;
+            text-shadow:
+                0 0 8px #fff,
+                0 0 15px var(--planet-color),
+                0 0 25px var(--planet-color),
+                0 0 35px var(--core-color-start);
+            margin-bottom: 1.5rem;
+        }
+        .cta-btn { /* Base button style */
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            margin: 0.5rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
             font-weight: 600;
-            color: var(--text-light-primary);
-            margin-bottom: 1rem; /* mb-4 */
-            margin-top: 1.5rem; /* mt-6 */
+            color: var(--bg-dark-primary);
+            border: 2px solid transparent;
+            border-radius: 50px;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, color 0.3s ease;
+            cursor: pointer;
         }
-        p, ul, ol {
-            color: var(--text-light-secondary);
-            line-height: 1.7;
-            font-size: 1rem; /* text-base */
-            margin-bottom: 1rem; /* mb-4 */
+        /* Mint Now Button Specific Style */
+        #mint-button-intro {
+            background: linear-gradient(45deg, var(--core-color-start), var(--planet-color));
+            box-shadow: 0 0 15px var(--planet-color);
         }
+        #mint-button-intro:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px var(--planet-color), 0 0 10px var(--core-color-start);
+        }
+        /* Enter Site Button Specific Style */
+        #enter-button {
+            background: rgba(255, 255, 255, 0.9); /* White button */
+            color: var(--planet-color); /* Pink text */
+            border-color: var(--planet-color);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        #enter-button:hover {
+            background: white;
+            color: var(--core-color-end); /* Purple text on hover */
+            border-color: var(--core-color-end);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px white, 0 0 10px var(--core-color-end);
+        }
+
+        /* Intro Animations */
+        @keyframes title-fade-in {
+            to { opacity: 1; }
+        }
+
+        /* Utility Class */
+        .hidden {
+            display: none !important;
+        }
+        #main-page {
+            opacity: 0; /* Start hidden */
+            transition: opacity 1s ease-in; /* Fade in transition */
+        }
+        #main-page.visible {
+            opacity: 1;
+        }
+
+
+        /* --- Main Page Styles (Abbreviated for brevity) --- */
+        .content-wrapper { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
+        section { padding: 4rem 0; border-bottom: 1px solid var(--border-color-light); }
+        section:last-of-type { border-bottom: none; }
+        .hero-section { text-align: center; padding: 6rem 0 4rem 0; background: linear-gradient(180deg, var(--bg-dark-secondary) 0%, var(--bg-dark-primary) 100%); }
+        .hero-section h1 { font-size: 3rem; line-height: 1.2; margin-bottom: 1rem; animation: hue-rotate-animation 6s linear infinite, hue-rotate-shadow-animation 6s linear infinite; }
+        .hero-section .subtitle { font-size: 1.25rem; margin-bottom: 2rem; animation: hue-rotate-animation 6s linear infinite; font-weight: 500; }
+        .hero-section p { max-width: 700px; margin-left: auto; margin-right: auto; color: var(--text-light-secondary); font-size: 1.125rem; line-height: 1.8; }
+        h2 { font-size: 2.25rem; font-weight: 700; margin-bottom: 2rem; text-align: center; animation: hue-rotate-animation 6s linear infinite; }
+        h3 { font-size: 1.5rem; font-weight: 600; color: var(--text-light-primary); margin-bottom: 1rem; margin-top: 1.5rem; }
+        h4 { font-size: 1.125rem; font-weight: 600; color: var(--text-light-secondary); margin-bottom: 0.75rem; margin-top: 1.25rem; }
+        p, ul, ol { color: var(--text-light-secondary); line-height: 1.7; font-size: 1rem; margin-bottom: 1rem; }
         ul { list-style: none; padding-left: 0; }
         ol { list-style: none; padding-left: 0; counter-reset: ordered-list-counter; }
-
-        /* --- Card Component Styling --- */
-        .card {
-            background-color: var(--bg-dark-card);
-            padding: 1.5rem; /* p-6 */
-            border-radius: 0.75rem; /* rounded-xl */
-            border: 1px solid var(--border-color-light);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            height: 100%; /* Ensure cards in a grid have same height */
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-        .card h3 {
-            margin-top: 0;
-            margin-bottom: 0.75rem; /* mb-3 */
-            font-size: 1.25rem; /* text-xl */
-            color: var(--text-light-primary);
-        }
-        .card p, .card ul {
-            font-size: 0.95rem; /* Slightly smaller text in cards */
-            color: var(--text-light-secondary);
-            margin-bottom: 0; /* Remove bottom margin for last element */
-        }
-        .card ul li {
-            margin-bottom: 0.5rem; /* mb-2 */
-            position: relative;
-            padding-left: 1.25rem; /* pl-5 */
-        }
-        .card ul li::before {
-            content: '»';
-            position: absolute;
-            left: 0;
-            top: 0;
-            animation: hue-rotate-animation 6s linear infinite;
-            font-weight: bold;
-        }
-
-        /* --- Specific Section Layouts --- */
-
-        /* About Section - Key Advantages Grid */
-        #about .advantages-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid */
-            gap: 1.5rem; /* gap-6 */
-            margin-top: 2rem; /* mt-8 */
-        }
-
-        /* Rewards Section */
-        #rewards-work .rewards-list li,
-        #security .security-list li,
-        #dapp .dapp-features li {
-            position: relative;
-            padding-left: 1.75rem; /* pl-7 */
-            margin-bottom: 0.75rem; /* mb-3 */
-        }
-        #rewards-work .rewards-list li::before {
-            content: '❖'; position: absolute; left: 0; top: 0.1em; font-size: 1.2em;
-            animation: hue-rotate-animation 6s linear infinite;
-        }
-        #security .security-list li::before {
-            content: '🛡️'; position: absolute; left: 0; top: 0.1em;
-        }
-        #dapp .dapp-features li::before {
-            content: '⚙️'; position: absolute; left: 0; top: 0.1em;
-        }
-
-        .highlight-box {
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem; /* rounded-lg */
-            margin: 1.5rem 0;
-            color: var(--text-light-primary);
-            /* Animated background and border */
-            animation: hue-rotate-background-animation 6s linear infinite, hue-rotate-border-animation 6s linear infinite;
-            border-left-width: 4px; border-left-style: solid;
-        }
-         .highlight-box p.accent-text {
-             animation: hue-rotate-animation 6s linear infinite;
-         }
-
-        /* Tokenomics & Fees Section - Grid Layout */
-        #tokenomics-fees .grid {
-            display: grid;
-            grid-template-columns: repeat(1, 1fr); /* Single column on mobile */
-            gap: 2rem; /* gap-8 */
-        }
-        @media (min-width: 768px) { /* md breakpoint */
-             #tokenomics-fees .grid {
-                 grid-template-columns: repeat(2, 1fr); /* Two columns on medium screens */
-             }
-        }
-        #tokenomics-fees .card table { width: 100%; margin-top: 1rem; }
-        #tokenomics-fees .card th, #tokenomics-fees .card td {
-            padding: 0.75rem 1rem; text-align: left;
-            border-bottom: 1px solid var(--border-color-light);
-            font-size: 0.9rem;
-        }
-        #tokenomics-fees .card th { color: var(--text-light-secondary); font-weight: 500; }
-        #tokenomics-fees .card td { color: var(--text-light-primary); }
-        #tokenomics-fees .card tr:last-child td { border-bottom: none; }
-        #tokenomics-fees .card span.accent-text { animation: hue-rotate-animation 6s linear infinite; }
-
-
-        /* How to Buy Section - Ordered List Styling */
-        #how-to-buy ol {
-            max-width: 600px;
-            margin: 1.5rem auto 0 auto; /* mt-6 */
-        }
-        #how-to-buy li {
-            background-color: var(--bg-dark-card);
-            padding: 1rem 1.5rem; /* p-4 px-6 */
-            margin-bottom: 1rem; /* mb-4 */
-            border-radius: 0.5rem; /* rounded-lg */
-            border-left-width: 4px;
-            border-left-style: solid;
-            animation: hue-rotate-border-animation 6s linear infinite alternate; /* Alternate direction */
-            position: relative;
-            counter-increment: ordered-list-counter;
-            padding-left: 3.5rem; /* Make space for number */
-            transition: transform 0.2s ease;
-        }
-         #how-to-buy li:hover {
-             transform: translateX(5px);
-         }
-         #how-to-buy li::before {
-             content: counter(ordered-list-counter);
-             position: absolute;
-             left: 1rem;
-             top: 50%;
-             transform: translateY(-50%);
-             font-family: 'Rajdhani', sans-serif;
-             font-weight: 700;
-             font-size: 1.5rem; /* text-2xl */
-             animation: hue-rotate-animation 6s linear infinite alternate;
-             width: 2rem; /* Fixed width for alignment */
-             text-align: center;
-         }
-
-        /* --- Play Game Section --- */
-        #play-game {
-            text-align: center;
-            background: var(--bg-dark-secondary); /* Slightly different background */
-            padding: 3rem 0; /* Reduced padding */
-        }
-         #play-game h2 {
-             margin-bottom: 1rem; /* Less margin below heading */
-         }
-         #play-game p {
-             max-width: 600px;
-             margin-left: auto;
-             margin-right: auto;
-             margin-bottom: 2rem; /* mb-8 */
-             color: var(--text-light-secondary);
-         }
-        .play-button {
-            display: inline-block;
-            padding: 1rem 2.5rem; /* py-4 px-10 */
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 1.25rem; /* text-xl */
-            font-weight: 700;
-            color: var(--bg-dark-primary); /* Dark text on bright button */
-            border-radius: 50px; /* Pill shape */
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            text-decoration: none;
-            /* Animated background and shadow */
-            animation: hue-rotate-bg-color-animation 6s linear infinite, hue-rotate-shadow-animation 6s linear infinite;
-        }
-        .play-button:hover {
-            transform: scale(1.05) translateY(-3px);
-            box-shadow: 0 10px 25px hsla(0, 0%, 0%, 0.4); /* Darker shadow on hover */
-        }
-
-
-        /* Roadmap Section - Timeline Style */
-        #roadmap .timeline {
-            position: relative;
-            max-width: 800px;
-            margin: 2rem auto 0 auto; /* mt-8 */
-        }
-        /* Central line */
-        #roadmap .timeline::after {
-            content: '';
-            position: absolute;
-            width: 4px;
-            background: linear-gradient(180deg, hsl(145, 70%, 55%), hsl(185, 70%, 55%), hsl(265, 70%, 65%), hsl(325, 70%, 60%));
-            background-size: 100% 400%; /* For gradient animation */
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            margin-left: -2px;
-            animation: hue-rotate-background-vertical 6s linear infinite; /* Custom animation */
-            border-radius: 2px;
-        }
-
-        @keyframes hue-rotate-background-vertical {
-             0% { background-position: 0% 0%; }
-             100% { background-position: 0% 400%; }
-        }
-
-
-        #roadmap .timeline-item {
-            padding: 1rem 2.5rem; /* p-4 px-10 */
-            position: relative;
-            background-color: inherit;
-            width: 50%;
-            margin-bottom: 2rem; /* Add space between items */
-        }
-        /* Circles on timeline */
-        #roadmap .timeline-item::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            right: -10px;
-            background-color: var(--bg-dark-primary);
-            border-width: 4px;
-            border-style: solid;
-            top: calc(50% - 10px);
-            border-radius: 50%;
-            z-index: 1;
-            animation: hue-rotate-border-animation 6s linear infinite;
-        }
-        /* Left items */
+        .card { background-color: var(--bg-dark-card); padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border-color-light); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); height: 100%; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); }
+        .card h3 { margin-top: 0; margin-bottom: 0.75rem; font-size: 1.25rem; color: var(--text-light-primary); }
+        .card p, .card ul { font-size: 0.95rem; color: var(--text-light-secondary); margin-bottom: 0; }
+        .card ul li { margin-bottom: 0.5rem; position: relative; padding-left: 1.25rem; }
+        .card ul li::before { content: '»'; position: absolute; left: 0; top: 0; animation: hue-rotate-animation 6s linear infinite; font-weight: bold; }
+        #about .advantages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+        #rewards-work .rewards-list li, #security .security-list li, #dapp .dapp-features li, #nft-presale .details-list li { position: relative; padding-left: 1.75rem; margin-bottom: 0.75rem; }
+        #nft-presale .details-list li::before { content: '▹'; position: absolute; left: 0; top: 0.1em; font-size: 1.1em; animation: hue-rotate-animation 6s linear infinite; }
+        #rewards-work .rewards-list li::before { content: '❖'; position: absolute; left: 0; top: 0.1em; font-size: 1.2em; animation: hue-rotate-animation 6s linear infinite; }
+        #security .security-list li::before { content: '🛡️'; position: absolute; left: 0; top: 0.1em; }
+        #dapp .dapp-features li::before { content: '⚙️'; position: absolute; left: 0; top: 0.1em; }
+        .highlight-box { padding: 1rem 1.5rem; border-radius: 0.5rem; margin: 1.5rem 0; color: var(--text-light-primary); animation: hue-rotate-background-animation 6s linear infinite, hue-rotate-border-animation 6s linear infinite; border-left-width: 4px; border-left-style: solid; }
+        .highlight-box p.accent-text { animation: hue-rotate-animation 6s linear infinite; }
+        #tokenomics-fees .grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 2rem; }
+        @media (min-width: 768px) { #tokenomics-fees .grid { grid-template-columns: repeat(2, 1fr); } }
+        #tokenomics-fees .card table, #nft-presale table { width: 100%; margin-top: 1rem; border-collapse: collapse; }
+        #tokenomics-fees .card th, #tokenomics-fees .card td, #nft-presale th, #nft-presale td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color-light); font-size: 0.9rem; vertical-align: middle; }
+        #tokenomics-fees .card th, #nft-presale th { color: var(--text-light-secondary); font-weight: 600; background-color: rgba(0,0,0,0.1); }
+        #tokenomics-fees .card td, #nft-presale td { color: var(--text-light-primary); }
+        #tokenomics-fees .card tr:last-child td, #nft-presale tr:last-child td { border-bottom: none; }
+        #tokenomics-fees .card span.accent-text, #nft-presale span.accent-text { animation: hue-rotate-animation 6s linear infinite; display: inline-block; }
+        #nft-presale .tier-table th, #nft-presale .tier-table td { padding: 0.6rem 0.8rem; }
+        #characters .character-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1.5rem; }
+        @media (min-width: 500px) { #characters .character-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 768px) { #characters .character-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (min-width: 1024px) { #characters .character-grid { grid-template-columns: repeat(5, 1fr); } }
+        .character-card { background-color: var(--bg-dark-card); border-radius: 0.75rem; border: 1px solid var(--border-color-light); text-align: center; padding: 1.5rem 1rem; transition: transform 0.3s ease, box-shadow 0.3s ease; position: relative; overflow: hidden; }
+        .character-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); }
+        .character-card .char-img-placeholder { width: 100%; padding-bottom: 100%; background-color: var(--bg-dark-tertiary); border-radius: 0.5rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--text-light-secondary); position: relative; overflow: hidden; }
+        .character-card .char-img-placeholder img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .character-card h4 { font-size: 1.25rem; font-weight: 700; color: var(--text-light-primary); margin-top: 0; margin-bottom: 0.25rem; }
+        .character-card .tier-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 0; animation: hue-rotate-animation 6s linear infinite; }
+        .character-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: inherit; border: 2px solid transparent; pointer-events: none; transition: border-color 0.3s ease; animation: hue-rotate-border-animation 6s linear infinite paused; }
+        .character-card:hover::before { animation-play-state: running; }
+        #how-to-buy ol { max-width: 600px; margin: 1.5rem auto 0 auto; }
+        #how-to-buy li { background-color: var(--bg-dark-card); padding: 1rem 1.5rem; margin-bottom: 1rem; border-radius: 0.5rem; border-left-width: 4px; border-left-style: solid; animation: hue-rotate-border-animation 6s linear infinite alternate; position: relative; counter-increment: ordered-list-counter; padding-left: 3.5rem; transition: transform 0.2s ease; }
+        #how-to-buy li:hover { transform: translateX(5px); }
+        #how-to-buy li::before { content: counter(ordered-list-counter); position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.5rem; animation: hue-rotate-animation 6s linear infinite alternate; width: 2rem; text-align: center; }
+        #nft-presale .grid-cols-2 { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1.5rem; }
+        @media (min-width: 768px) { #nft-presale .grid-cols-2 { grid-template-columns: repeat(2, 1fr); } }
+        #nft-presale .grid-cols-3 { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1.5rem; }
+        @media (min-width: 640px) { #nft-presale .grid-cols-3 { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { #nft-presale .grid-cols-3 { grid-template-columns: repeat(3, 1fr); } }
+        #nft-presale .timeline-list li { position: relative; padding-left: 1.5rem; margin-bottom: 0.5rem; border-left: 2px solid var(--border-color-light); padding-top: 0.25rem; padding-bottom: 0.25rem; }
+        #nft-presale .timeline-list li::before { content: ''; position: absolute; left: -6px; top: 0.6em; width: 10px; height: 10px; border-radius: 50%; animation: hue-rotate-bg-color-animation 6s linear infinite; }
+        #nft-presale .timeline-list strong { display: block; color: var(--text-light-primary); font-weight: 600; margin-bottom: 0.25rem; }
+        #play-game { text-align: center; background: var(--bg-dark-secondary); padding: 3rem 0; }
+        #play-game h2 { margin-bottom: 1rem; }
+        #play-game p { max-width: 600px; margin-left: auto; margin-right: auto; margin-bottom: 2rem; color: var(--text-light-secondary); }
+        .play-button { display: inline-block; padding: 1rem 2.5rem; font-family: 'Rajdhani', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--bg-dark-primary); border-radius: 50px; text-transform: uppercase; letter-spacing: 0.05em; transition: transform 0.3s ease, box-shadow 0.3s ease; text-decoration: none; animation: hue-rotate-bg-color-animation 6s linear infinite, hue-rotate-shadow-animation 6s linear infinite; }
+        .play-button:hover { transform: scale(1.05) translateY(-3px); box-shadow: 0 10px 25px hsla(0, 0%, 0%, 0.4); }
+        #roadmap .timeline { position: relative; max-width: 800px; margin: 2rem auto 0 auto; }
+        #roadmap .timeline::after { content: ''; position: absolute; width: 4px; background: linear-gradient(180deg, hsl(145, 70%, 55%), hsl(185, 70%, 55%), hsl(265, 70%, 65%), hsl(325, 70%, 60%)); background-size: 100% 400%; top: 0; bottom: 0; left: 50%; margin-left: -2px; animation: hue-rotate-background-vertical 6s linear infinite; border-radius: 2px; }
+        @keyframes hue-rotate-background-vertical { 0% { background-position: 0% 0%; } 100% { background-position: 0% 400%; } }
+        #roadmap .timeline-item { padding: 1rem 2.5rem; position: relative; background-color: inherit; width: 50%; margin-bottom: 2rem; }
+        #roadmap .timeline-item::after { content: ''; position: absolute; width: 20px; height: 20px; right: -10px; background-color: var(--bg-dark-primary); border-width: 4px; border-style: solid; top: calc(50% - 10px); border-radius: 50%; z-index: 1; animation: hue-rotate-border-animation 6s linear infinite; }
         #roadmap .timeline-item.left { left: 0; padding-right: 3rem; }
-        #roadmap .timeline-item.left::before { /* Connector line */
-            content: " "; height: 0; position: absolute; top: calc(50% - 1px); width: 0; z-index: 1; right: 20px;
-            border: medium solid var(--border-color); border-width: 2px 0 2px 20px; border-color: transparent transparent transparent var(--border-color);
-        }
+        #roadmap .timeline-item.left::before { content: " "; height: 0; position: absolute; top: calc(50% - 1px); width: 0; z-index: 1; right: 20px; border: medium solid var(--border-color); border-width: 2px 0 2px 20px; border-color: transparent transparent transparent var(--border-color); }
         #roadmap .timeline-item.left::after { left: -10px; }
-
-        /* Right items */
         #roadmap .timeline-item.right { left: 50%; padding-left: 3rem;}
-        #roadmap .timeline-item.right::before { /* Connector line */
-             content: " "; height: 0; position: absolute; top: calc(50% - 1px); width: 0; z-index: 1; left: 20px;
-             border: medium solid var(--border-color); border-width: 2px 20px 2px 0; border-color: transparent var(--border-color) transparent transparent;
-        }
-        #roadmap .timeline-item.right::after { left: -10px; } /* Position circle correctly */
-
-         /* Responsive adjustments for timeline */
-        @media screen and (max-width: 768px) {
-            #roadmap .timeline::after { left: 20px; } /* Move line to left */
-            #roadmap .timeline-item { width: 100%; padding-left: 50px; padding-right: 15px; left: 0 !important; /* Override left/right positioning */ }
-            #roadmap .timeline-item::before { /* Point arrows to the left */
-                left: 35px; border-width: 10px 15px 10px 0; border-color: transparent var(--border-color) transparent transparent; top: calc(50% - 10px);
-            }
-            #roadmap .timeline-item.left::after, #roadmap .timeline-item.right::after { left: 10px; } /* Move circles */
-             #roadmap .timeline-item.right { left: 0%; } /* Ensure right items stack correctly */
-        }
-
-        #roadmap .timeline-content {
-            padding: 1.5rem;
-            background-color: var(--bg-dark-card);
-            position: relative;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border-color-light);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-         #roadmap .timeline-content:hover {
-             transform: translateY(-3px);
-             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-         }
+        #roadmap .timeline-item.right::before { content: " "; height: 0; position: absolute; top: calc(50% - 1px); width: 0; z-index: 1; left: 20px; border: medium solid var(--border-color); border-width: 2px 20px 2px 0; border-color: transparent var(--border-color) transparent transparent; }
+        #roadmap .timeline-item.right::after { left: -10px; }
+        @media screen and (max-width: 768px) { #roadmap .timeline::after { left: 20px; } #roadmap .timeline-item { width: 100%; padding-left: 50px; padding-right: 15px; left: 0 !important; } #roadmap .timeline-item::before { left: 35px; border-width: 10px 15px 10px 0; border-color: transparent var(--border-color) transparent transparent; top: calc(50% - 10px); } #roadmap .timeline-item.left::after, #roadmap .timeline-item.right::after { left: 10px; } #roadmap .timeline-item.right { left: 0%; } }
+        #roadmap .timeline-content { padding: 1.5rem; background-color: var(--bg-dark-card); position: relative; border-radius: 0.5rem; border: 1px solid var(--border-color-light); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        #roadmap .timeline-content:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
         #roadmap .timeline-content h3 { margin-top: 0; font-size: 1.25rem; color: var(--text-light-primary); animation: hue-rotate-animation 6s linear infinite; }
         #roadmap .timeline-content ul { margin-bottom: 0; }
-        #roadmap .timeline-content li {
-            font-size: 0.9rem; color: var(--text-light-secondary); margin-bottom: 0.3rem; position: relative; padding-left: 1rem;
-        }
-         #roadmap .timeline-content li::before {
-             content: '▹'; position: absolute; left: 0; top: 0.1em; animation: hue-rotate-animation 6s linear infinite;
-         }
-
-
-        /* --- Footer --- */
-        footer {
-            text-align: center;
-            padding: 3rem 0;
-            background-color: var(--bg-dark-secondary);
-            margin-top: 4rem; /* mt-16 */
-            border-top: 1px solid var(--border-color);
-        }
-        footer p {
-            margin-bottom: 0.75rem; /* mb-3 */
-            color: var(--text-light-secondary);
-        }
+        #roadmap .timeline-content li { font-size: 0.9rem; color: var(--text-light-secondary); margin-bottom: 0.3rem; position: relative; padding-left: 1rem; }
+        #roadmap .timeline-content li::before { content: '▹'; position: absolute; left: 0; top: 0.1em; animation: hue-rotate-animation 6s linear infinite; }
+        footer { text-align: center; padding: 3rem 0; background-color: var(--bg-dark-secondary); margin-top: 4rem; border-top: 1px solid var(--border-color); }
+        footer p { margin-bottom: 0.75rem; color: var(--text-light-secondary); }
         footer strong { color: var(--text-light-primary); }
-        footer .links span { margin: 0 0.75rem; } /* Space out links */
-        footer .copyright { font-size: 0.875rem; /* text-sm */ opacity: 0.7; margin-top: 1.5rem; /* mt-6 */}
+        footer .links span { margin: 0 0.75rem; }
+        footer .copyright { font-size: 0.875rem; opacity: 0.7; margin-top: 1.5rem; }
 
     </style>
 </head>
 <body>
 
-    <section class="hero-section">
-        <div class="content-wrapper">
-            <h1>$YUMI Official Litepaper</h1>
-            <p class="subtitle">(Powered by $OMEGA Reflections on Monad Network)</p>
-            <p>Welcome to $YUMI, the next evolution of DeFi rewards on the Monad Network (Testnet). Unlike passive drip projects, $YUMI empowers users to actively track and claim their own $OMEGA reflections, directly through a secure dApp.</p>
+    <div id="intro-page">
+        <video id="intro-video-bg" autoplay muted loop playsinline>
+             <source src="./assets/intro-background.mp4" type="video/mp4">
+             Your browser does not support the video tag.
+        </video>
+        <canvas id="starfield"></canvas>
+        <div id="title-screen">
+            <h2 class="intro-logo-name">$YUMI</h2>
+            <h1>The Last Spark</h1>
+            <button id="enter-button" class="cta-btn enter-btn">Enter Site</button>
+            <a href="javascript:void(0);" id="mint-button-intro" class="cta-btn">MINT NOW</a>
         </div>
-    </section>
+    </div>
 
-    <section id="about">
-        <div class="content-wrapper">
-            <h2>About $YUMI</h2>
-            <p class="text-center max-w-3xl mx-auto mb-10">
-                $YUMI is a community-focused token operating on Monad’s EVM-compatible network. Through volume-driven fees and a dynamic rewards system, $YUMI holders earn claimable $OMEGA tokens — with future expansions across multiple blockchains.
-            </p>
-            <div class="advantages-grid">
-                <div class="card">
-                    <h3><span class="accent-text">Volume-Based Rewards</span></h3>
-                    <p>Earnings grow proportionally with $YUMI trading activity, creating a self-sustaining reward cycle.</p>
-                </div>
-                <div class="card">
-                    <h3><span class="accent-text">Self-Claimable Reflections</span></h3>
-                    <p>You have full control over when you claim your accumulated $OMEGA rewards via the secure dApp.</p>
-                </div>
-                <div class="card">
-                    <h3><span class="accent-text">Multi-Network Strategy</span></h3>
-                    <p>Designed for the future: planned expansions to Ethereum (ETH), Binance Smart Chain (BSC), and beyond.</p>
+    <div id="main-page" class="hidden"> <section class="hero-section">
+            <div class="content-wrapper">
+                <h1>$YUMI Official Litepaper</h1>
+                <p class="subtitle">(Powered by $OMEGA Reflections on Monad Network)</p>
+                <p>Welcome to $YUMI, the next evolution of DeFi rewards on the Monad Network. Unlike passive drip projects, $YUMI empowers users to actively track and claim their own $OMEGA reflections, directly through a secure dApp.</p>
+            </div>
+        </section>
+
+        <section id="about">
+            <div class="content-wrapper">
+                <h2>About $YUMI</h2>
+                <p class="text-center max-w-3xl mx-auto mb-10">
+                    $YUMI is a community-focused token operating on Monad’s high-performance, EVM-compatible network. Through volume-driven fees and a dynamic rewards system, $YUMI holders earn claimable $OMEGA tokens — with future expansions across multiple blockchains.
+                </p>
+                <div class="advantages-grid">
+                    <div class="card">
+                        <h3><span class="accent-text">Volume-Based Rewards</span></h3>
+                        <p>Earnings grow proportionally with $YUMI trading activity, creating a self-sustaining reward cycle.</p>
+                    </div>
+                    <div class="card">
+                        <h3><span class="accent-text">Self-Claimable Reflections</span></h3>
+                        <p>You have full control over when you claim your accumulated $OMEGA rewards via the secure dApp.</p>
+                    </div>
+                    <div class="card">
+                        <h3><span class="accent-text">Multi-Network Strategy</span></h3>
+                        <p>Designed for the future: planned expansions to Ethereum (ETH), Binance Smart Chain (BSC), and beyond.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section id="rewards-work" class="bg-gradient-to-b from-transparent to-black/10">
-        <div class="content-wrapper">
-            <h2>How $OMEGA Rewards Work</h2>
-            <div class="grid md:grid-cols-2 gap-8 items-center">
-                <div>
-                    <ul class="rewards-list text-lg space-y-3">
-                        <li>Every buy, sell, and transfer incurs fees that fund the rewards pool.</li>
-                        <li><span class="accent-text">2%</span> of each transaction is allocated toward $OMEGA rewards.</li>
-                        <li>Rewards are tracked off-chain and updated daily via secure batch processing.</li>
-                        <li>Rewards are claimable in the native token of the network where $YUMI is deployed (e.g., Monad token on Monad, ETH on Ethereum).</li>
+        <section id="rewards-work" class="bg-gradient-to-b from-transparent to-black/10">
+            <div class="content-wrapper">
+                <h2>How $OMEGA Rewards Work</h2>
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <ul class="rewards-list text-lg space-y-3">
+                            <li>Every buy, sell, and transfer incurs fees that fund the rewards pool.</li>
+                            <li><span class="accent-text">2%</span> of each transaction is allocated toward $OMEGA rewards.</li>
+                            <li>Rewards are tracked off-chain and updated daily via secure batch processing.</li>
+                            <li>Rewards are claimable in the native token of the network where $YUMI is deployed (e.g., Monad token on Monad, ETH on Ethereum).</li>
+                        </ul>
+                        <div class="highlight-box">
+                             <p class="font-semibold accent-text mb-2">Initial Launch on Monad:</p>
+                             <p class="mb-0">$OMEGA rewards accumulate and are automatically converted into Monad tokens at claim time for a seamless holder experience.</p>
+                         </div>
+                    </div>
+                    <div class="text-center p-6 bg-gray-900/30 rounded-lg border border-gray-700">
+                         <h3 class="mt-0 mb-4">Summary of Rewards Flow</h3>
+                         <p class="font-mono text-lg md:text-xl space-x-2 flex flex-wrap justify-center items-center leading-relaxed">
+                            <span>Volume</span> <span class="accent-text text-2xl mx-1">➔</span>
+                            <span>Fees</span> <span class="accent-text text-2xl mx-1">➔</span>
+                            <span>Pool</span> <span class="accent-text text-2xl mx-1">➔</span>
+                            <span>dApp</span> <span class="accent-text text-2xl mx-1">➔</span>
+                            <span>Claim</span>
+                            <span class="text-sm block w-full mt-2">(Native Token / Monad Conversion)</span>
+                        </p>
+                         <ul class="rewards-list mt-6 text-left max-w-sm mx-auto text-base">
+                            <li>Updates every <span class="accent-text">24 hours</span>.</li>
+                            <li>View rewards via dApp connection.</li>
+                            <li>Manual claim anytime.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tokenomics-fees">
+            <div class="content-wrapper">
+                <h2 class="mb-10">Tokenomics & Fees</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3 class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-coin mr-2 animated-accent-fill" viewBox="0 0 16 16"><path d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.112V5.57c.6.068.982.396 1.074.85h1.052c-.076-.919-.864-1.638-2.126-1.716V4h-.6v.719c-1.195.117-2.01.836-2.01 1.853 0 .9.606 1.472 1.613 1.707l.397.098v2.034c-.615-.093-1.022-.43-1.114-.9H5.5zm2.177-2.166c-.59-.137-.91-.416-.91-.836 0-.47.345-.822.915-.925v1.76h-.005zm.692 1.193c.717.166 1.048.435 1.048.91 0 .542-.412.914-1.135.982V8.518l.087.02z"/><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M8 13.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11zm0 .5A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"/></svg>
+                            Tokenomics
+                        </h3>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <th>Total Supply</th>
+                                    <td><span class="accent-text">100,000,000</span> $YUMI (9 decimals)</td>
+                                </tr>
+                                <tr>
+                                    <th>Max Transaction</th>
+                                    <td><span class="accent-text">2%</span> of Total Supply</td>
+                                </tr>
+                                <tr>
+                                    <th>Max Wallet</th>
+                                    <td><span class="accent-text">3%</span> of Total Supply</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card">
+                         <h3 class="flex items-center">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-receipt-cutoff mr-2 animated-accent-fill" viewBox="0 0 16 16"><path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zM11.5 4a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1z"/><path d="M2.354.646a.5.5 0 1 0-.708.708L3.293 3H2a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1H6.707L2.354.646zm-.217 1.192L1.414 1.146l-.707.708L2.828 4H14v1H2V4.172L.137 1.838zM15 5.5V14a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V5.5a.5.5 0 0 1 1 0v7.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V5.5a.5.5 0 0 1 1 0z"/></svg>
+                            Fee Structure
+                        </h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Buy Fee</th>
+                                    <th>Sell Fee</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Platform Fee</td><td><span class="accent-text">1%</span></td><td><span class="accent-text">1%</span></td></tr>
+                                <tr><td>Rewards Fee</td><td><span class="accent-text">2%</span></td><td><span class="accent-text">2%</span></td></tr>
+                                <tr><td>Liquidity Fee</td><td><span class="accent-text">1%</span></td><td><span class="accent-text">1%</span></td></tr>
+                                <tr><td>Launch Sell Fee</td><td>N/A</td><td><span class="accent-text">7%</span></td></tr>
+                            </tbody>
+                        </table>
+                         <p class="font-semibold accent-text text-center mt-4 text-sm">Developer Fee: 0% — Clean transactions for all holders.</p>
+                         <p class="text-center text-xs text-light-secondary mt-2">Launch Sell Fee (7%) is active for the first 48 hours after launch.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="characters">
+            <div class="content-wrapper">
+                <h2>Neon Profile</h2>
+                <p class="text-center max-w-3xl mx-auto mb-10">
+                    The $YUMI NFT collection features five core characters, each tied to a specific rarity tier and bonus multiplier. Mint an NFT to reveal which character you receive!
+                </p>
+                <div class="character-grid">
+                    <div class="character-card">
+                        <div class="char-img-placeholder">
+                            <img src="./Assets/Yumi.png" alt="Yumi Character Art" onerror="this.src='https://placehold.co/200x200/1f1f38/a0a0c0?text=Image+Error'; this.alt='Yumi image failed to load'">
+                        </div>
+                        <h4>Yumi</h4>
+                        <p class="tier-name">Diamond Orb</p>
+                    </div>
+                    <div class="character-card">
+                         <div class="char-img-placeholder">
+                             <img src="./Assets/Kage.png" alt="Kage Character Art" onerror="this.src='https://placehold.co/200x200/1f1f38/a0a0c0?text=Image+Error'; this.alt='Kage image failed to load'">
+                        </div>
+                        <h4>Kage</h4>
+                        <p class="tier-name">Ruby Orb</p>
+                    </div>
+                    <div class="character-card">
+                         <div class="char-img-placeholder">
+                             <img src="./Assets/omega.png" alt="Omega Character Art" onerror="this.src='https://placehold.co/200x200/1f1f38/a0a0c0?text=Image+Error'; this.alt='Omega image failed to load'">
+                        </div>
+                        <h4>Omega</h4>
+                        <p class="tier-name">Emerald Orb</p>
+                    </div>
+                    <div class="character-card">
+                         <div class="char-img-placeholder">
+                             <img src="./Assets/Murk.png" alt="Murk Character Art" onerror="this.src='https://placehold.co/200x200/1f1f38/a0a0c0?text=Image+Error'; this.alt='Murk image failed to load'">
+                        </div>
+                        <h4>Murk</h4>
+                        <p class="tier-name">Gold Orb</p>
+                    </div>
+                    <div class="character-card"><div class="char-img-placeholder"><img src="./Assets/Solus.png" alt="Solus Character Art" onerror="this.src='https://placehold.co/200x200/1f1f38/a0a0c0?text=Image+Error'; this.alt='Solus image failed to load'">
+                        </div>   
+                        <h4>Solus</h4>
+                        <p class="tier-name">Silver Orb</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-to-buy">
+            <div class="content-wrapper">
+                <h2>How to Buy $YUMI</h2>
+                <ol>
+                    <li>Create a Monad-Compatible Wallet (e.g., MetaMask configured for Monad).</li>
+                    <li>Acquire Monad network tokens (e.g., via faucet or bridge).</li>
+                    <li>Connect your wallet to a Monad DEX (e.g., MonadSwap).</li>
+                    <li>Import the $YUMI Contract Address (to be provided).</li>
+                    <li>Swap Monad tokens for $YUMI.</li>
+                    <li>Hold $YUMI in your wallet to automatically accrue rewards.</li>
+                    <li>Visit the $YUMI dApp (link to be provided) to view and claim rewards.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section id="nft-presale" class="bg-gradient-to-b from-transparent to-black/10">
+            <div class="content-wrapper">
+                <h2>NFT Launch & Presale</h2>
+                <p class="text-center max-w-3xl mx-auto mb-10">
+                    Engage with the $YUMI ecosystem from day one through our exclusive tiered NFT collection. Minting an NFT grants you early access and bonus $YUMI token rewards.
+                </p>
+
+                <div class="card mb-8">
+                    <h3 class="accent-text">1. Executive Summary</h3>
+                    <ul class="details-list">
+                        <li><strong>Project:</strong> Tiered NFT mint + linked $YUMI token presale</li>
+                        <li><strong>Network:</strong> Monad (EVM Compatible)</li>
+                        <li><strong>Total $YUMI Supply:</strong> <span class="accent-text">100,000,000</span> tokens (9 decimals)</li>
+                        <li><strong>Collection Size:</strong> <span class="accent-text">3,500</span> NFTs across 5 rarity tiers</li>
+                        <li><strong>Mint Price:</strong> <span class="accent-text">1 $Monad</span> per NFT (base price)</li>
+                        <li><strong>Mint Site:</strong> <a href="https://yumi-nft.web.app" target="_blank" rel="noopener noreferrer" class="accent-text underline">yumi-nft.web.app</a> (Link active during mint)</li>
                     </ul>
-                    <div class="highlight-box">
-                         <p class="font-semibold accent-text mb-2">Currently on Testnet:</p>
-                         <p class="mb-0">$OMEGA rewards accumulate and are automatically converted into Monad tokens at claim time for a seamless holder experience.</p>
+                </div>
+
+                <div class="card mb-8">
+                     <h3 class="accent-text">2. Objectives</h3>
+                     <div class="grid-cols-2">
+                         <div>
+                             <h4>Bootstrap Community</h4>
+                             <ul class="details-list text-sm">
+                                 <li>Attract early adopters via collectible NFTs.</li>
+                                 <li>Leverage rewards for deeper engagement.</li>
+                             </ul>
+                         </div>
+                         <div>
+                             <h4>Token Distribution</h4>
+                             <ul class="details-list text-sm">
+                                 <li>Allocate $YUMI supply to NFT buyers.</li>
+                                 <li>Offer tiered bonuses based on rarity.</li>
+                             </ul>
+                         </div>
+                         <div>
+                             <h4>dApp Adoption</h4>
+                             <ul class="details-list text-sm">
+                                 <li>Drive traffic to the $YUMI dApp.</li>
+                             </ul>
+                         </div>
+                         <div>
+                             <h4>Brand & World-Building</h4>
+                             <ul class="details-list text-sm">
+                                 <li>Introduce core characters: Yumi, Kage, Omega, Murk, Solus.</li>
+                             </ul>
+                         </div>
                      </div>
                 </div>
-                <div class="text-center p-6 bg-gray-900/30 rounded-lg border border-gray-700">
-                     <h3 class="mt-0 mb-4">Summary of Rewards Flow</h3>
-                     <p class="font-mono text-lg md:text-xl space-x-2 flex flex-wrap justify-center items-center leading-relaxed">
-                        <span>Volume</span> <span class="accent-text text-2xl mx-1">➔</span>
-                        <span>Fees</span> <span class="accent-text text-2xl mx-1">➔</span>
-                        <span>Pool</span> <span class="accent-text text-2xl mx-1">➔</span>
-                        <span>dApp</span> <span class="accent-text text-2xl mx-1">➔</span>
-                        <span>Claim</span>
-                        <span class="text-sm block w-full mt-2">(Native Token / Monad Conversion)</span>
-                    </p>
-                     <ul class="rewards-list mt-6 text-left max-w-sm mx-auto text-base">
-                        <li>Updates every <span class="accent-text">24 hours</span>.</li>
-                        <li>View rewards via dApp connection.</li>
-                        <li>Manual claim anytime.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <section id="tokenomics-fees">
-        <div class="content-wrapper">
-            <h2 class="mb-10">Tokenomics & Fees</h2>
-            <div class="grid">
-                <div class="card">
-                    <h3 class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-coin mr-2 animated-accent-fill" viewBox="0 0 16 16"><path d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.112V5.57c.6.068.982.396 1.074.85h1.052c-.076-.919-.864-1.638-2.126-1.716V4h-.6v.719c-1.195.117-2.01.836-2.01 1.853 0 .9.606 1.472 1.613 1.707l.397.098v2.034c-.615-.093-1.022-.43-1.114-.9H5.5zm2.177-2.166c-.59-.137-.91-.416-.91-.836 0-.47.345-.822.915-.925v1.76h-.005zm.692 1.193c.717.166 1.048.435 1.048.91 0 .542-.412.914-1.135.982V8.518l.087.02z"/><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M8 13.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11zm0 .5A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"/></svg>
-                        Tokenomics
-                    </h3>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <th>Total Supply</th>
-                                <td><span class="accent-text">100,000,000</span> $YUMI (9 decimals)</td>
-                            </tr>
-                            <tr>
-                                <th>Max Transaction</th>
-                                <td><span class="accent-text">2%</span> of Total Supply</td>
-                            </tr>
-                            <tr>
-                                <th>Max Wallet</th>
-                                <td><span class="accent-text">3%</span> of Total Supply</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="mb-8">
+                     <h3 class="accent-text text-center">3. NFT Tiers & The Reveal</h3>
+                     <p class="text-center text-sm mb-4">The collection consists of 3,500 Orbs. Each mint is a <span class="accent-text">blind reveal</span> – you won't know which character and tier you've received until the transaction completes! Will fate grant you the elusive Diamond Orb?</p>
+                     <table class="tier-table w-full max-w-md mx-auto">
+                         <thead>
+                             <tr>
+                                 <th>Tier</th>
+                                 <th>Character</th>
+                             </tr>
+                         </thead>
+                         <tbody>
+                             <tr><td>Diamond Orb</td><td>Yumi</td></tr>
+                             <tr><td>Ruby Orb</td><td>Kage</td></tr>
+                             <tr><td>Emerald Orb</td><td>Omega</td></tr>
+                             <tr><td>Gold Orb</td><td>Murk</td></tr>
+                             <tr><td>Silver Orb</td><td>Solus</td></tr>
+                         </tbody>
+                     </table>
                 </div>
-                <div class="card">
-                     <h3 class="flex items-center">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-receipt-cutoff mr-2 animated-accent-fill" viewBox="0 0 16 16"><path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zM11.5 4a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1z"/><path d="M2.354.646a.5.5 0 1 0-.708.708L3.293 3H2a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1H6.707L2.354.646zm-.217 1.192L1.414 1.146l-.707.708L2.828 4H14v1H2V4.172L.137 1.838zM15 5.5V14a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V5.5a.5.5 0 0 1 1 0v7.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V5.5a.5.5 0 0 1 1 0z"/></svg>
-                        Fee Structure
-                    </h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Buy Fee</th>
-                                <th>Sell Fee</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>Platform Fee</td><td><span class="accent-text">3%</span></td><td><span class="accent-text">3%</span></td></tr>
-                            <tr><td>Rewards Fee</td><td><span class="accent-text">2%</span></td><td><span class="accent-text">2%</span></td></tr>
-                            <tr><td>Liquidity Fee</td><td><span class="accent-text">1%</span></td><td><span class="accent-text">1%</span></td></tr>
-                            <tr><td>Launch Sell Fee</td><td>N/A</td><td><span class="accent-text">7%</span></td></tr>
-                        </tbody>
-                    </table>
-                     <p class="font-semibold accent-text text-center mt-4 text-sm">Developer Fee: 0% — Clean transactions for all holders.</p>
-                </div>
-            </div>
-        </div>
-    </section>
 
-     <section id="how-to-buy">
-        <div class="content-wrapper">
-            <h2>How to Buy $YUMI</h2>
-            <ol>
-                <li>Create a Monad-Compatible Wallet (e.g., MetaMask configured for Monad).</li>
-                <li>Acquire Monad Test Tokens via an official faucet.</li>
-                <li>Connect your wallet to a Monad DEX (e.g., MonadSwap).</li>
-                <li>Import the $YUMI Contract Address (to be provided).</li>
-                <li>Swap Monad tokens for $YUMI.</li>
-                <li>Hold $YUMI in your wallet to automatically accrue rewards.</li>
-                <li>Visit the $YUMI dApp (link to be provided) to view and claim rewards.</li>
-            </ol>
-        </div>
-    </section>
-
-     <section id="dapp" class="bg-gradient-to-b from-transparent to-black/10">
-        <div class="content-wrapper">
-            <h2>$YUMI Rewards dApp</h2>
-             <p class="text-center max-w-3xl mx-auto mb-10">
-                The dedicated $YUMI dApp provides a seamless interface for managing your $OMEGA rewards. Connect your wallet to access the dashboard.
-            </p>
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="card text-center">
-                     <h3 class="accent-text">Connect Wallet</h3>
-                     <p>Supports standard Monad EVM wallets like MetaMask.</p>
+                <div class="grid-cols-2 mb-8">
+                    <div class="card">
+                        <h3 class="accent-text">4. Presale Mechanics</h3>
+                        <h4>Whitelist Phase</h4>
+                        <ul class="details-list text-sm">
+                            <li>Duration: <span class="accent-text">3 days</span></li>
+                            <li>Allocation: <span class="accent-text">50%</span> of supply reserved</li>
+                        </ul>
+                        <h4>Public Mint Phase</h4>
+                         <ul class="details-list text-sm">
+                            <li>Duration: <span class="accent-text">5 days</span> (or until sold out)</li>
+                            <li>Open to all with Monad network tokens</li>
+                        </ul>
+                        <h4>Per-Wallet Cap</h4>
+                        <ul class="details-list text-sm">
+                            <li>Limit: <span class="accent-text">5</span> NFTs per wallet</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3 class="accent-text">5. Token Reward Mechanics</h3>
+                        <p class="text-sm mb-4">Each NFT grants a base $YUMI allocation plus a tier bonus multiplier:</p>
+                        <table class="w-full">
+                            <thead>
+                                <tr>
+                                    <th>Tier</th>
+                                    <th>Bonus Multiplier</th>
+                                </tr>
+                            </thead>
+                             <tbody>
+                                 <tr><td>Diamond (Yumi)</td><td><span class="accent-text">+20%</span></td></tr>
+                                 <tr><td>Ruby (Kage)</td><td><span class="accent-text">+10%</span></td></tr>
+                                 <tr><td>Emerald (Omega)</td><td><span class="accent-text">+5%</span></td></tr>
+                                 <tr><td>Gold (Murk)</td><td>+0%</td></tr>
+                                 <tr><td>Silver (Solus)</td><td><span class="accent-text">–10%</span></td></tr>
+                             </tbody>
+                        </table>
+                         <p class="text-xs text-light-secondary mt-2">Base allocation determined by mint price relative to token price at launch.</p>
+                    </div>
                 </div>
-                 <div class="card text-center">
-                     <h3 class="accent-text">View Dashboard</h3>
-                     <p>See your real-time accumulated $OMEGA rewards, updated daily.</p>
-                </div>
-                 <div class="card text-center">
-                     <h3 class="accent-text">Claim Rewards</h3>
-                     <p>Manually claim your rewards in the native Monad token with a single click.</p>
-                </div>
-            </div>
-             <p class="highlight-box mt-10 text-center">Holders are free to claim rewards anytime, avoiding unnecessary gas fees or complex interactions outside the dApp.</p>
-        </div>
-    </section>
 
-    <section id="play-game">
-        <div class="content-wrapper">
-            <h2>Engage & Earn</h2>
-            <p>Experience the $YUMI ecosystem beyond reflections. Click below to play our integrated web game!</p>
-            <a href="Yumi game/index.html" target="_blank" rel="noopener noreferrer" class="play-button">
-                Play Game Now
-            </a>
-        </div>
-    </section>
+                 <div class="card mb-8">
+                     <h3 class="accent-text">6. Tokenomics & Allocation</h3>
+                     <table class="w-full">
+                         <tbody>
+                             <tr><td>Presale Rewards Pool</td><td><span class="accent-text">17,500,000</span> $YUMI</td><td>(<span class="accent-text">17.5%</span>)</td></tr>
+                             <tr><td>Team & Treasury</td><td><span class="accent-text">10,000,000</span> $YUMI</td><td>(<span class="accent-text">10%</span>)*</td></tr>
+                             <tr><td>Liquidity & Ecosystem</td><td><span class="accent-text">40,000,000</span> $YUMI</td><td>(<span class="accent-text">40%</span>)</td></tr>
+                             <tr><td>Staking & Partnerships</td><td><span class="accent-text">22,500,000</span> $YUMI</td><td>(<span class="accent-text">22.5%</span>)</td></tr>
+                             <tr><td>Community Events & Airdrops</td><td><span class="accent-text">10,000,000</span> $YUMI</td><td>(<span class="accent-text">10%</span>)</td></tr>
+                         </tbody>
+                     </table>
+                     <p class="text-xs text-light-secondary mt-2">*Team & Treasury allocation subject to a 1-year lock.</p>
+                </div>
 
-    <section id="roadmap">
-        <div class="content-wrapper">
-            <h2>Roadmap</h2>
-            <div class="timeline">
-                <div class="timeline-item left">
-                    <div class="timeline-content">
-                        <h3>Phase 1: Testnet Deployment</h3>
-                        <ul>
-                            <li>Token Launch + 40% Burn</li>
-                            <li>Initial Rewards Engine Deployed</li>
-                            <li>Website & Litepaper Launch</li>
-                            <li>Liquidity Locked (Testnet)</li>
+                <div class="card mb-8">
+                     <h3 class="accent-text">7. Technical Implementation</h3>
+                     <div class="grid-cols-3">
+                         <div>
+                             <h4>Smart Contracts</h4>
+                             <ul class="details-list text-sm">
+                                 <li>ERC-721 NFT Minting (with tier hook)</li>
+                                 <li>ERC-20 Reward Accounting</li>
+                                 <li>Reward Distribution Module</li>
+                             </ul>
+                         </div>
+                         <div>
+                             <h4>dApp Dashboard</h4>
+                             <ul class="details-list text-sm">
+                                 <li>MetaMask Connection (Monad)</li>
+                                 <li>View NFTs, Tiers, Rewards</li>
+                                 <li>Claim Rewards (Native Token)</li>
+                             </ul>
+                         </div>
+                         <div>
+                             <h4>Security</h4>
+                             <ul class="details-list text-sm">
+                                 <li>Third-Party Audit</li>
+                                 <li>Merkle Root Whitelist</li>
+                                 <li>Rate Limits & Anti-Bot</li>
+                             </ul>
+                         </div>
+                     </div>
+                </div>
+
+                 <div class="card mb-8">
+                     <h3 class="accent-text">8. NFT Launch Timeline</h3>
+                     <ul class="timeline-list">
+                         <li><strong>Week 0:</strong> Finalize contracts, audit, launch whitelist sign-up.</li>
+                         <li><strong>Week 1:</strong> Whitelist mint phase (<span class="accent-text">50%</span> supply).</li>
+                         <li><strong>Week 2:</strong> Public mint opens, dApp reward dashboard goes live.</li>
+                         <li><strong>Week 3–4:</strong> Claim window opens (24hr updates), begin cross-chain planning.</li>
+                     </ul>
+                </div>
+
+                <div class="grid-cols-2">
+                     <div class="card">
+                        <h3 class="accent-text">9. Marketing & Community</h3>
+                        <h4>Pre-Mint</h4>
+                        <ul class="details-list text-sm"><li>Character Teasers, AMAs</li></ul>
+                         <h4>On-Mint</h4>
+                        <ul class="details-list text-sm"><li>Live Tracker, Giveaways</li></ul>
+                         <h4>Post-Mint</h4>
+                        <ul class="details-list text-sm"><li>Holder Exclusives, Voting</li></ul>
+                    </div>
+                     <div class="card">
+                        <h3 class="accent-text">10. Legal & Compliance</h3>
+                        <ul class="details-list text-sm">
+                            <li>Clear Terms of Sale & Disclaimers</li>
+                            <li>KYC/AML for Team Wallets</li>
+                            <li>EVM Standard Contracts</li>
                         </ul>
                     </div>
                 </div>
-                <div class="timeline-item right">
-                    <div class="timeline-content">
-                        <h3>Phase 2: dApp Finalization</h3>
-                        <ul>
-                            <li>Rewards Dashboard Live</li>
-                            <li>Public dApp Testing & Feedback</li>
-                            <li>CMC + CG Testnet Listings</li>
-                            <li>Initial Influencer Campaigns</li>
-                        </ul>
+
+            </div>
+        </section>
+
+        <section id="play-game">
+            <div class="content-wrapper">
+                <h2>Engage & Earn</h2>
+                <p>Experience the $YUMI ecosystem beyond reflections. Click below to play our integrated web game!</p>
+                <a href="https://yumi-nft.web.app/Yumi-game/index_game.html" target="_self" rel="noopener noreferrer" class="play-button">
+                    Play Game Now
+                </a> 
+            </div>
+        </section>
+
+        <section id="roadmap">
+            <div class="content-wrapper">
+                <h2>Project Roadmap</h2>
+                <div class="timeline">
+                    <div class="timeline-item left">
+                        <div class="timeline-content">
+                            <h3>Phase 1: Monad Foundation</h3>
+                            <ul>
+                                <li>Token Launch + 40% Burn</li>
+                                <li>Initial Rewards Engine Deployed</li>
+                                <li>Website & Litepaper Launch</li>
+                                <li>Liquidity Locked (Monad)</li>
+                                 <li>NFT Presale Launch (See details above)</li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
-                 <div class="timeline-item left">
-                    <div class="timeline-content">
-                         <h3>Phase 3: Cross-Chain Expansion</h3>
-                         <ul>
-                            <li>Deploy to Ethereum Mainnet & BSC</li>
-                            <li>Native Token $OMEGA Rewards on New Chains</li>
-                            <li>Exploratory NFT Integration</li>
-                            <li>Establish DAO Governance Voting</li>
-                        </ul>
+                    <div class="timeline-item right">
+                        <div class="timeline-content">
+                            <h3>Phase 2: dApp & Community</h3>
+                            <ul>
+                                <li>Rewards Dashboard Live</li>
+                                <li>Public dApp Testing & Feedback</li>
+                                <li>CMC + CG Listings</li>
+                                <li>Initial Influencer Campaigns</li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
-                 <div class="timeline-item right">
-                    <div class="timeline-content">
-                        <h3>Phase 4: Growth & Ecosystem</h3>
-                         <ul>
-                            <li>Mobile App (Viewer/Claimer) Deployment</li>
-                            <li>Launch YUMI DeFi Vaults (Staking, Farming)</li>
-                            <li>Strategic Partnerships & Integrations</li>
-                            <li>Explore Real-World Use Cases</li>
-                        </ul>
+                     <div class="timeline-item left">
+                        <div class="timeline-content">
+                             <h3>Phase 3: Cross-Chain Expansion</h3>
+                             <ul>
+                                <li>Deploy to Ethereum Mainnet & BSC</li>
+                                <li>Native Token $OMEGA Rewards on New Chains</li>
+                                <li>Exploratory NFT Integration (Phase 2)</li>
+                                <li>Establish DAO Governance Voting</li>
+                            </ul>
+                        </div>
+                    </div>
+                     <div class="timeline-item right">
+                        <div class="timeline-content">
+                            <h3>Phase 4: Growth & Ecosystem</h3>
+                             <ul>
+                                <li>Mobile App (Viewer/Claimer) Deployment</li>
+                                <li>Launch YUMI DeFi Vaults (Staking, Farming)</li>
+                                <li>Strategic Partnerships & Integrations</li>
+                                <li>Explore Real-World Use Cases</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section id="security">
-        <div class="content-wrapper">
-            <h2>Security & Transparency</h2>
-            <ul class="security-list grid md:grid-cols-2 gap-x-8 gap-y-4 max-w-3xl mx-auto">
-                <li>Liquidity Locked at Launch (Mainnet)</li>
-                <li>Rewards Contract Audited Pre-Launch</li>
-                <li>Manual Claiming via Secure UI Only</li>
-                <li>Contract Upgradability via Governance</li>
-                <li>Emergency Rescue Functions for Stability</li>
-                <li>Transparent Communication Channels</li>
-            </ul>
-        </div>
-    </section>
-
-    <section id="conclusion" class="text-center bg-gradient-to-b from-transparent to-black/20">
-        <div class="content-wrapper">
-            <h2>Conclusion</h2>
-            <p class="max-w-3xl mx-auto text-lg mb-8">
-                $YUMI combines volume-driven growth, user-controlled rewards, and a multi-network vision. By empowering holders to claim $OMEGA rewards in each network’s native token, $YUMI is built for sustainable growth and scalability across Monad, Ethereum, BSC, and beyond.
-            </p>
-            <p class="text-3xl font-semibold accent-text mt-10 tracking-wider">Claim. Earn. Grow.</p>
-            <p class="text-xl font-medium text-light-secondary mt-3">This is just the beginning.</p>
-        </div>
-    </section>
-
-    <section id="comic-viewer">
-        <div class="content-wrapper">
-            <h2>Comic Panels</h2>
-            <div class="flex items-center justify-center">
-                <button id="prevPage" class="px-4 py-2 mr-4 rounded-md animated-accent-bg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-left-circle-fill" viewBox="0 0 16 16">
-                      <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 7.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
-                    </svg>
-                </button>
-                <div class="comic-panel-container">
-                    <!-- Comic panel will be displayed here -->
-                    <img id="comicPanel" src="" alt="Comic Panel" class="max-w-full h-auto" />
-                </div>
-                <button id="nextPage" class="px-4 py-2 ml-4 rounded-md animated-accent-bg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-right-circle-fill" viewBox="0 0 16 16">
-                      <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm4.5 0a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5a.5.5 0 0 0 0 1z"/>
-                    </svg>
-                </button>
+        <section id="security">
+            <div class="content-wrapper">
+                <h2>Security & Transparency</h2>
+                <ul class="security-list grid md:grid-cols-2 gap-x-8 gap-y-4 max-w-3xl mx-auto">
+                    <li>Liquidity Locked at Launch</li>
+                    <li>Rewards Contract Audited Pre-Launch</li>
+                    <li>NFT Contract Audited Pre-Mint</li>
+                    <li>Manual Claiming via Secure UI Only</li>
+                    <li>Contract Upgradability via Governance</li>
+                    <li>Emergency Rescue Functions for Stability</li>
+                    <li>Transparent Communication Channels</li>
+                </ul>
             </div>
-            <p id="pageNumber" class="text-center mt-4">Page 1 of 0</p>
-        </div>
-    </section>
+        </section>
 
-    <footer>
-        <div class="content-wrapper">
-            <p><strong>Official Links Coming Soon:</strong></p>
-            <p class="links text-lg">
-                <span>Website</span> | <span>Rewards Portal</span> | <span>Telegram</span> | <span>Twitter</span> | <span>Contract Address</span>
-            </p>
-            <p class="copyright">&copy; 2025 $YUMI Project. All rights reserved.</p>
-        </div>
-    </footer>
-    <script>
-        const comicPanels = [
-            "comics/example1.png",
-            "comics/example2.png",
-            "comics/example3.png",
-            // Add your comic panel image paths here
-        ];
-        let currentPanelIndex = 0;
+        <section id="conclusion" class="text-center bg-gradient-to-b from-transparent to-black/20">
+            <div class="content-wrapper">
+                <h2>Conclusion</h2>
+                <p class="max-w-3xl mx-auto text-lg mb-8">
+                    $YUMI combines volume-driven growth, user-controlled rewards, an engaging NFT launch, and a multi-network vision. By empowering holders to claim $OMEGA rewards and participate early via NFTs, $YUMI is built for sustainable growth and scalability across Monad, Ethereum, BSC, and beyond.
+                </p>
+                <p class="text-3xl font-semibold accent-text mt-10 tracking-wider">Claim. Earn. Grow.</p>
+                <p class="text-xl font-medium text-light-secondary mt-3">This is just the beginning.</p>
+            </div>
+        </section>
 
-        const comicPanelImg = document.getElementById('comicPanel');
-        const pageNumber = document.getElementById('pageNumber');
-        const prevPageButton = document.getElementById('prevPage');
-        const nextPageButton = document.getElementById('nextPage');
+        <footer>
+            <div class="content-wrapper">
+                <p><strong>Official Links Coming Soon:</strong></p>
+                <p class="links text-lg">
+                    <span>Website</span> | <span>Rewards Portal</span> | <span>NFT Mint Site</span> | <span>Telegram</span> | <span>Twitter</span> | <span>Contract Address</span>
+                </p>
+                <p class="copyright">&copy; 2025 $YUMI Project. All rights reserved.</p>
+            </div>
+        </footer>
 
-        function updateComicPanel() {
-            if (comicPanels.length === 0) {
-                comicPanelImg.src = ""; // clear the image
-                pageNumber.textContent = `No Pages Available`;
-                return;
+    </div> <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const introPage = document.getElementById('intro-page');
+            const mainPage = document.getElementById('main-page');
+            const starfieldCanvas = document.getElementById('starfield');
+            const enterButton = document.getElementById('enter-button');
+            const mintButtonIntro = document.getElementById('mint-button-intro');
+            const introVideo = document.getElementById('intro-video-bg'); // Get video element
+            const ctx = starfieldCanvas.getContext('2d');
+            let stars = [];
+            let animationFrameId;
+
+            function resizeCanvas() {
+                starfieldCanvas.width = window.innerWidth;
+                starfieldCanvas.height = window.innerHeight;
             }
-            comicPanelImg.src = comicPanels[currentPanelIndex];
-            pageNumber.textContent = `Page ${currentPanelIndex + 1} of ${comicPanels.length}`;
-        }
 
-        function nextPanel() {
-            currentPanelIndex = (currentPanelIndex + 1) % comicPanels.length;
-            updateComicPanel();
-        }
+            function createStars(count) {
+                stars = [];
+                for (let i = 0; i < count; i++) {
+                    stars.push({
+                        x: Math.random() * starfieldCanvas.width,
+                        y: Math.random() * starfieldCanvas.height,
+                        radius: Math.random() * 1.5 + 0.5, // Star size
+                        alpha: Math.random() * 0.5 + 0.5, // Star opacity
+                        speed: Math.random() * 0.3 + 0.1 // Star speed
+                    });
+                }
+            }
 
-        function previousPanel() {
-            currentPanelIndex = (currentPanelIndex - 1 + comicPanels.length) % comicPanels.length;
-            updateComicPanel();
-        }
+            function drawStars() {
+                if (!ctx) return; // Exit if context is not available
+                ctx.clearRect(0, 0, starfieldCanvas.width, starfieldCanvas.height);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Star color
 
-        prevPageButton.addEventListener('click', previousPanel);
-        nextPageButton.addEventListener('click', nextPanel);
+                stars.forEach(star => {
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.globalAlpha = star.alpha;
+                    ctx.fill();
 
-        updateComicPanel();
+                    // Move star
+                    star.y += star.speed;
+
+                    // Reset star if it goes off screen
+                    if (star.y > starfieldCanvas.height + star.radius) {
+                        star.y = -star.radius;
+                        star.x = Math.random() * starfieldCanvas.width;
+                    }
+                });
+                ctx.globalAlpha = 1; // Reset alpha
+                animationFrameId = requestAnimationFrame(drawStars);
+            }
+
+            function showIntroPage() {
+                introPage.classList.remove('hidden');
+                mainPage.classList.add('hidden');
+                mainPage.classList.remove('visible');
+                resizeCanvas();
+                createStars(150); // Slightly fewer stars with video
+                drawStars();
+                // Attempt to play video (might be blocked by browser policy if not user-initiated)
+                introVideo.play().catch(error => {
+                    console.log("Video autoplay failed:", error);
+                    // Optionally hide video or show a play button if autoplay fails
+                });
+            }
+
+            function transitionToMainPage() {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId); // Stop starfield animation
+                }
+                introVideo.pause(); // Stop video playback
+                introPage.style.opacity = '0'; // Start fade out using CSS transition
+                introPage.style.pointerEvents = 'none';
+
+                // Wait for fade out transition to nearly complete
+                setTimeout(() => {
+                    introPage.classList.add('hidden'); // Hide completely after fade
+                    mainPage.classList.remove('hidden');
+                    // Trigger reflow before adding 'visible' class for transition
+                    void mainPage.offsetWidth;
+                    mainPage.classList.add('visible'); // Start fade in using CSS transition
+                }, 900); // Slightly less than transition duration
+
+                // Optional: Remove intro page from DOM after transition
+                // setTimeout(() => {
+                //     introPage.remove();
+                // }, 2000); // Longer delay to ensure fade-in completes
+            }
+
+            // --- Run Intro ---
+            showIntroPage();
+
+            // --- Event Listeners ---
+            if(enterButton) {
+                enterButton.addEventListener('click', transitionToMainPage);
+            }
+
+            if(mintButtonIntro) {
+                 mintButtonIntro.addEventListener('click', (e) => {
+                     e.preventDefault(); // Prevent default anchor behavior
+                     alert('Minting Coming Soon!'); // Show message
+                 });
+             }
+
+            // Ensure canvas resizes correctly if window size changes during intro
+            window.addEventListener('resize', () => {
+                if (introPage && !introPage.classList.contains('hidden') && introPage.style.opacity !== '0') {
+                    resizeCanvas();
+                    createStars(150); // Recreate stars for new size
+                }
+            });
+        });
     </script>
 
-</body>
+    </body>
 </html>
