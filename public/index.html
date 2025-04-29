@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$YUMI Official Litepaper - Web3 Layout with Game Link</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Apply Base Fonts */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-dark-primary);
+            color: var(--text-light-primary);
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        /* Dark Theme Colors */
+        :root {
+            --bg-dark-primary: #12121f; /* Slightly darker primary */
+            --bg-dark-secondary: #1a1a2e; /* Existing secondary */
+            --bg-dark-tertiary: #16213e; /* Existing tertiary */
+            --bg-dark-card: #1f1f38; /* Background for cards/sections */
+            --text-light-primary: #e0e0e0;
+            --text-light-secondary: #a0a0c0;
+            --border-color: #4a4a6a;
+            --border-color-light: #2a2a4a; /* Lighter border for internal elements */
+        }
+        
+        /* Comic Viewer Styling */
+        #comic-viewer {
+            padding: 4rem 0;
+            border-top: 1px solid var(--border-color);
+        }
+        .comic-panel-container {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* --- Animated Hue Effect (Same as before) --- */
+        @keyframes hue-rotate-animation {
+            0% { color: hsl(145, 70%, 55%); } 25% { color: hsl(185, 70%, 55%); }
+            50% { color: hsl(265, 70%, 65%); } 75% { color: hsl(325, 70%, 60%); }
+            100% { color: hsl(145, 70%, 55%); }
+        }
+        @keyframes hue-rotate-border-animation {
+             0% { border-color: hsl(145, 70%, 55%); } 25% { border-color: hsl(185, 70%, 55%); }
+             50% { border-color: hsl(265, 70%, 65%); } 75% { border-color: hsl(325, 70%, 60%); }
+             100% { border-color: hsl(145, 70%, 55%); }
+        }
+        @keyframes hue-rotate-shadow-animation {
+             0% { text-shadow: 0 0 10px hsl(145, 70%, 55%, 0.6); box-shadow: 0 0 15px hsl(145, 70%, 55%, 0.4); }
+             25% { text-shadow: 0 0 10px hsl(185, 70%, 55%, 0.6); box-shadow: 0 0 15px hsl(185, 70%, 55%, 0.4); }
+             50% { text-shadow: 0 0 10px hsl(265, 70%, 65%, 0.6); box-shadow: 0 0 15px hsl(265, 70%, 65%, 0.4); }
+             75% { text-shadow: 0 0 10px hsl(325, 70%, 60%, 0.6); box-shadow: 0 0 15px hsl(325, 70%, 60%, 0.4); }
+             100% { text-shadow: 0 0 10px hsl(145, 70%, 55%, 0.6); box-shadow: 0 0 15px hsl(145, 70%, 55%, 0.4); }
+        }
+        @keyframes hue-rotate-background-animation {
+             0% { background-color: hsla(145, 70%, 55%, 0.1); } 25% { background-color: hsla(185, 70%, 55%, 0.1); }
+             50% { background-color: hsla(265, 70%, 65%, 0.1); } 75% { background-color: hsla(325, 70%, 60%, 0.1); }
+             100% { background-color: hsla(145, 70%, 55%, 0.1); }
+        }
+         @keyframes hue-rotate-fill-animation {
+             0% { fill: hsl(145, 70%, 55%); } 25% { fill: hsl(185, 70%, 55%); }
+             50% { fill: hsl(265, 70%, 65%); } 75% { fill: hsl(325, 70%, 60%); }
+             100% { fill: hsl(145, 70%, 55%); }
+        }
+        #comicPanel {
+            max-width: 100%;
+            height: auto;
+            max-height: 500px;
+        }
+        #prevPage, #nextPage {
+            background-color: var(--bg-dark-card);
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            opacity: 0.8;
+        }
+        #prevPage:hover, #nextPage:hover { opacity: 1; }
+        @keyframes hue-rotate-bg-color-animation {
+             0% { background-color: hsl(145, 70%, 55%); } 25% { background-color: hsl(185, 70%, 55%); }
+             50% { background-color: hsl(265, 70%, 65%); } 75% { background-color: hsl(325, 70%, 60%); }
+             100% { background-color: hsl(145, 70%, 55%); }
+        }
+
+
+        /* Apply animation to elements */
+        .animated-accent-text, .accent-text {
+            animation: hue-rotate-animation 6s linear infinite;
+            font-weight: 600;
+        }
+        .animated-accent-border {
+             border-left-width: 4px; border-left-style: solid;
+             animation: hue-rotate-border-animation 6s linear infinite;
+        }
+         .animated-accent-border-all { /* Apply animated border to all sides */
+             border-width: 2px; border-style: solid;
+             animation: hue-rotate-border-animation 6s linear infinite;
+         }
+        .animated-accent-bg-border {
+             animation: hue-rotate-background-animation 6s linear infinite, hue-rotate-border-animation 6s linear infinite;
+             border-left-width: 3px; border-left-style: solid;
+        }
+        .animated-accent-fill path { /* Target SVG paths */
+             animation: hue-rotate-fill-animation 6s linear infinite;
+        }
+        .animated-accent-bg { /* Animated background color */
+             animation: hue-rotate-bg-color-animation 6s linear infinite;
+        }
+        .animated-accent-shadow { /* Animated box/text shadow */
+            animation: hue-rotate-shadow-animation 6s linear infinite;
+        }
+
+
+        /* --- Layout Structure --- */
+        .content-wrapper {
+            max-width: 1100px; /* Wider max-width for modern layout */
+            margin: 0 auto;
+            padding: 0 1rem; /* Padding on sides */
+        }
+        section {
+            padding: 4rem 0; /* Vertical padding for sections */
+            border-bottom: 1px solid var(--border-color-light);
+        }
+        section:last-of-type {
+            border-bottom: none;
+        }
+
+        /* --- Header / Hero Section --- */
+        .hero-section {
+            text-align: center;
+            padding: 6rem 0 4rem 0; /* More padding top */
+            background: linear-gradient(180deg, var(--bg-dark-secondary) 0%, var(--bg-dark-primary) 100%);
+        }
+        .hero-section h1 {
+            font-size: 3rem; /* text-5xl */
+            line-height: 1.2;
+            margin-bottom: 1rem; /* mb-4 */
+            animation: hue-rotate-animation 6s linear infinite, hue-rotate-shadow-animation 6s linear infinite;
+        }
+        .hero-section .subtitle {
+             font-size: 1.25rem; /* text-xl */
+             margin-bottom: 2rem; /* mb-8 */
+             animation: hue-rotate-animation 6s linear infinite;
+             font-weight: 500;
+        }
+         .hero-section p {
+             max-width: 700px;
+             margin-left: auto;
+             margin-right: auto;
+             color: var(--text-light-secondary);
+             font-size: 1.125rem; /* text-lg */
+             line-height: 1.8;
+         }
+
+
+        /* --- General Section Styling --- */
+        h2 {
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 700;
+            margin-bottom: 2rem; /* mb-8 */
+            text-align: center;
+            animation: hue-rotate-animation 6s linear infinite;
+        }
+        h3 {
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: 600;
+            color: var(--text-light-primary);
+            margin-bottom: 1rem; /* mb-4 */
+            margin-top: 1.5rem; /* mt-6 */
+        }
+        p, ul, ol {
+            color: var(--text-light-secondary);
+            line-height: 1.7;
+            font-size: 1rem; /* text-base */
+            margin-bottom: 1rem; /* mb-4 */
+        }
+        ul { list-style: none; padding-left: 0; }
+        ol { list-style: none; padding-left: 0; counter-reset: ordered-list-counter; }
+
+        /* --- Card Component Styling --- */
+        .card {
+            background-color: var(--bg-dark-card);
+            padding: 1.5rem; /* p-6 */
+            border-radius: 0.75rem; /* rounded-xl */
+            border: 1px solid var(--border-color-light);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            height: 100%; /* Ensure cards in a grid have same height */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 0.75rem; /* mb-3 */
+            font-size: 1.25rem; /* text-xl */
+            color: var(--text-light-primary);
+        }
+        .card p, .card ul {
+            font-size: 0.95rem; /* Slightly smaller text in cards */
+            color: var(--text-light-secondary);
+            margin-bottom: 0; /* Remove bottom margin for last element */
+        }
+        .card ul li {
+            margin-bottom: 0.5rem; /* mb-2 */
+            position: relative;
+            padding-left: 1.25rem; /* pl-5 */
+        }
+        .card ul li::before {
+            content: '»';
+            position: absolute;
+            left: 0;
+            top: 0;
+            animation: hue-rotate-animation 6s linear infinite;
+            font-weight: bold;
+        }
+
+        /* --- Specific Section Layouts --- */
+
+        /* About Section - Key Advantages Grid */
+        #about .advantages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid */
+            gap: 1.5rem; /* gap-6 */
+            margin-top: 2rem; /* mt-8 */
+        }
+
+        /* Rewards Section */
+        #rewards-work .rewards-list li,
+        #security .security-list li,
+        #dapp .dapp-features li {
+            position: relative;
+            padding-left: 1.75rem; /* pl-7 */
+            margin-bottom: 0.75rem; /* mb-3 */
+        }
+        #rewards-work .rewards-list li::before {
+            content: '❖'; position: absolute; left: 0; top: 0.1em; font-size: 1.2em;
+            animation: hue-rotate-animation 6s linear infinite;
+        }
+        #security .security-list li::before {
+            content: '🛡️'; position: absolute; left: 0; top: 0.1em;
+        }
+        #dapp .dapp-features li::before {
+            content: '⚙️'; position: absolute; left: 0; top: 0.1em;
+        }
+
+        .highlight-box {
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            margin: 1.5rem 0;
+            color: var(--text-light-primary);
+            /* Animated background and border */
+            animation: hue-rotate-background-animation 6s linear infinite, hue-rotate-border-animation 6s linear infinite;
+            border-left-width: 4px; border-left-style: solid;
+        }
+         .highlight-box p.accent-text {
+             animation: hue-rotate-animation 6s linear infinite;
+         }
+
+        /* Tokenomics & Fees Section - Grid Layout */
+        #tokenomics-fees .grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr); /* Single column on mobile */
+            gap: 2rem; /* gap-8 */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+             #tokenomics-fees .grid {
+                 grid-template-columns: repeat(2, 1fr); /* Two columns on medium screens */
+             }
+        }
+        #tokenomics-fees .card table { width: 100%; margin-top: 1rem; }
+        #tokenomics-fees .card th, #tokenomics-fees .card td {
+            padding: 0.75rem 1rem; text-align: left;
+            border-bottom: 1px solid var(--border-color-light);
+            font-size: 0.9rem;
+        }
+        #tokenomics-fees .card th { color: var(--text-light-secondary); font-weight: 500; }
+        #tokenomics-fees .card td { color: var(--text-light-primary); }
+        #tokenomics-fees .card tr:last-child td { border-bottom: none; }
+        #tokenomics-fees .card span.accent-text { animation: hue-rotate-animation 6s linear infinite; }
+
+
+        /* How to Buy Section - Ordered List Styling */
+        #how-to-buy ol {
+            max-width: 600px;
+            margin: 1.5rem auto 0 auto; /* mt-6 */
+        }
+        #how-to-buy li {
+            background-color: var(--bg-dark-card);
+            padding: 1rem 1.5rem; /* p-4 px-6 */
+            margin-bottom: 1rem; /* mb-4 */
+            border-radius: 0.5rem; /* rounded-lg */
+            border-left-width: 4px;
+            border-left-style: solid;
+            animation: hue-rotate-border-animation 6s linear infinite alternate; /* Alternate direction */
+            position: relative;
+            counter-increment: ordered-list-counter;
+            padding-left: 3.5rem; /* Make space for number */
+            transition: transform 0.2s ease;
+        }
+         #how-to-buy li:hover {
+             transform: translateX(5px);
+         }
+         #how-to-buy li::before {
+             content: counter(ordered-list-counter);
+             position: absolute;
+             left: 1rem;
+             top: 50%;
+             transform: translateY(-50%);
+             font-family: 'Rajdhani', sans-serif;
+             font-weight: 700;
+             font-size: 1.5rem; /* text-2xl */
+             animation: hue-rotate-animation 6s linear infinite alternate;
+             width: 2rem; /* Fixed width for alignment */
+             text-align: center;
+         }
+
+        /* --- Play Game Section --- */
+        #play-game {
+            text-align: center;
+            background: var(--bg-dark-secondary); /* Slightly different background */
+            padding: 3rem 0; /* Reduced padding */
+        }
+         #play-game h2 {
+             margin-bottom: 1rem; /* Less margin below heading */
+         }
+         #play-game p {
+             max-width: 600px;
+             margin-left: auto;
+             margin-right: auto;
+             margin-bottom: 2rem; /* mb-8 */
+             color: var(--text-light-secondary);
+         }
+        .play-button {
+            display: inline-block;
+            padding: 1rem 2.5rem; /* py-4 px-10 */
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 700;
+            color: var(--bg-dark-primary); /* Dark text on bright button */
+            border-radius: 50px; /* Pill shape */
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            /* Animated background and shadow */
+            animation: hue-rotate-bg-color-animation 6s linear infinite, hue-rotate-shadow-animation 6s linear infinite;
+        }
+        .play-button:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 10px 25px hsla(0, 0%, 0%, 0.4); /* Darker shadow on hover */
+        }
+
+
+        /* Roadmap Section - Timeline Style */
+        #roadmap .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 2rem auto 0 auto; /* mt-8 */
+        }
+        /* Central line */
+        #roadmap .timeline::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            background: linear-gradient(180deg, hsl(145, 70%, 55%), hsl(185, 70%, 55%), hsl(265, 70%, 65%), hsl(325, 70%, 60%));
+            background-size: 100% 400%; /* For gradient animation */
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -2px;
+            animation: hue-rotate-background-vertical 6s linear infinite; /* Custom animation */
+            border-radius: 2px;
+        }
+
+        @keyframes hue-rotate-background-vertical {
+             0% { background-position: 0% 0%; }
+             100% { background-position: 0% 400%; }
+        }
+
+
+        #roadmap .timeline-item {
+            padding: 1rem 2.5rem; /* p-4 px-10 */
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+            margin-bottom: 2rem; /* Add space between items */
+        }
+        /* Circles on timeline */
+        #roadmap .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            right: -10px;
+            background-color: var(--bg-dark-primary);
+            border-width: 4px;
+            border-style: solid;
+            top: calc(50% - 10px);
+            border-radius: 50%;
+            z-index: 1;
+            animation: hue-rotate-border-animation 6s linear infinite;
+        }
+        /* Left items */
+        #roadmap .timeline-item.left { left: 0; padding-right: 3rem; }
+        #roadmap .timeline-item.left::before { /* Connector line */
+            content: " "; height: 0; position: absolute; top: calc(50% - 1px); width: 0; z-index: 1; right: 20px;
+            border: medium solid var(--border-color); border-width: 2px 0 2px 20px; border-color: transparent transparent transparent var(--border-color);
+        }
+        #roadmap .timeline-item.left::after { left: -10px; }
+
+        /* Right items */
+        #roadmap .timeline-item.right { left: 50%; padding-left: 3rem;}
+        #roadmap .timeline-item.right::before { /* Connector line */
+             content: " "; height: 0; position: absolute; top: calc(50% - 1px); width: 0; z-index: 1; left: 20px;
+             border: medium solid var(--border-color); border-width: 2px 20px 2px 0; border-color: transparent var(--border-color) transparent transparent;
+        }
+        #roadmap .timeline-item.right::after { left: -10px; } /* Position circle correctly */
+
+         /* Responsive adjustments for timeline */
+        @media screen and (max-width: 768px) {
+            #roadmap .timeline::after { left: 20px; } /* Move line to left */
+            #roadmap .timeline-item { width: 100%; padding-left: 50px; padding-right: 15px; left: 0 !important; /* Override left/right positioning */ }
+            #roadmap .timeline-item::before { /* Point arrows to the left */
+                left: 35px; border-width: 10px 15px 10px 0; border-color: transparent var(--border-color) transparent transparent; top: calc(50% - 10px);
+            }
+            #roadmap .timeline-item.left::after, #roadmap .timeline-item.right::after { left: 10px; } /* Move circles */
+             #roadmap .timeline-item.right { left: 0%; } /* Ensure right items stack correctly */
+        }
+
+        #roadmap .timeline-content {
+            padding: 1.5rem;
+            background-color: var(--bg-dark-card);
+            position: relative;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color-light);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+         #roadmap .timeline-content:hover {
+             transform: translateY(-3px);
+             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+         }
+        #roadmap .timeline-content h3 { margin-top: 0; font-size: 1.25rem; color: var(--text-light-primary); animation: hue-rotate-animation 6s linear infinite; }
+        #roadmap .timeline-content ul { margin-bottom: 0; }
+        #roadmap .timeline-content li {
+            font-size: 0.9rem; color: var(--text-light-secondary); margin-bottom: 0.3rem; position: relative; padding-left: 1rem;
+        }
+         #roadmap .timeline-content li::before {
+             content: '▹'; position: absolute; left: 0; top: 0.1em; animation: hue-rotate-animation 6s linear infinite;
+         }
+
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            background-color: var(--bg-dark-secondary);
+            margin-top: 4rem; /* mt-16 */
+            border-top: 1px solid var(--border-color);
+        }
+        footer p {
+            margin-bottom: 0.75rem; /* mb-3 */
+            color: var(--text-light-secondary);
+        }
+        footer strong { color: var(--text-light-primary); }
+        footer .links span { margin: 0 0.75rem; } /* Space out links */
+        footer .copyright { font-size: 0.875rem; /* text-sm */ opacity: 0.7; margin-top: 1.5rem; /* mt-6 */}
+
+    </style>
+</head>
+<body>
+
+    <section class="hero-section">
+        <div class="content-wrapper">
+            <h1>$YUMI Official Litepaper</h1>
+            <p class="subtitle">(Powered by $OMEGA Reflections on Monad Network)</p>
+            <p>Welcome to $YUMI, the next evolution of DeFi rewards on the Monad Network (Testnet). Unlike passive drip projects, $YUMI empowers users to actively track and claim their own $OMEGA reflections, directly through a secure dApp.</p>
+        </div>
+    </section>
+
+    <section id="about">
+        <div class="content-wrapper">
+            <h2>About $YUMI</h2>
+            <p class="text-center max-w-3xl mx-auto mb-10">
+                $YUMI is a community-focused token operating on Monad’s EVM-compatible network. Through volume-driven fees and a dynamic rewards system, $YUMI holders earn claimable $OMEGA tokens — with future expansions across multiple blockchains.
+            </p>
+            <div class="advantages-grid">
+                <div class="card">
+                    <h3><span class="accent-text">Volume-Based Rewards</span></h3>
+                    <p>Earnings grow proportionally with $YUMI trading activity, creating a self-sustaining reward cycle.</p>
+                </div>
+                <div class="card">
+                    <h3><span class="accent-text">Self-Claimable Reflections</span></h3>
+                    <p>You have full control over when you claim your accumulated $OMEGA rewards via the secure dApp.</p>
+                </div>
+                <div class="card">
+                    <h3><span class="accent-text">Multi-Network Strategy</span></h3>
+                    <p>Designed for the future: planned expansions to Ethereum (ETH), Binance Smart Chain (BSC), and beyond.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="rewards-work" class="bg-gradient-to-b from-transparent to-black/10">
+        <div class="content-wrapper">
+            <h2>How $OMEGA Rewards Work</h2>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <ul class="rewards-list text-lg space-y-3">
+                        <li>Every buy, sell, and transfer incurs fees that fund the rewards pool.</li>
+                        <li><span class="accent-text">2%</span> of each transaction is allocated toward $OMEGA rewards.</li>
+                        <li>Rewards are tracked off-chain and updated daily via secure batch processing.</li>
+                        <li>Rewards are claimable in the native token of the network where $YUMI is deployed (e.g., Monad token on Monad, ETH on Ethereum).</li>
+                    </ul>
+                    <div class="highlight-box">
+                         <p class="font-semibold accent-text mb-2">Currently on Testnet:</p>
+                         <p class="mb-0">$OMEGA rewards accumulate and are automatically converted into Monad tokens at claim time for a seamless holder experience.</p>
+                     </div>
+                </div>
+                <div class="text-center p-6 bg-gray-900/30 rounded-lg border border-gray-700">
+                     <h3 class="mt-0 mb-4">Summary of Rewards Flow</h3>
+                     <p class="font-mono text-lg md:text-xl space-x-2 flex flex-wrap justify-center items-center leading-relaxed">
+                        <span>Volume</span> <span class="accent-text text-2xl mx-1">➔</span>
+                        <span>Fees</span> <span class="accent-text text-2xl mx-1">➔</span>
+                        <span>Pool</span> <span class="accent-text text-2xl mx-1">➔</span>
+                        <span>dApp</span> <span class="accent-text text-2xl mx-1">➔</span>
+                        <span>Claim</span>
+                        <span class="text-sm block w-full mt-2">(Native Token / Monad Conversion)</span>
+                    </p>
+                     <ul class="rewards-list mt-6 text-left max-w-sm mx-auto text-base">
+                        <li>Updates every <span class="accent-text">24 hours</span>.</li>
+                        <li>View rewards via dApp connection.</li>
+                        <li>Manual claim anytime.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tokenomics-fees">
+        <div class="content-wrapper">
+            <h2 class="mb-10">Tokenomics & Fees</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3 class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-coin mr-2 animated-accent-fill" viewBox="0 0 16 16"><path d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.112V5.57c.6.068.982.396 1.074.85h1.052c-.076-.919-.864-1.638-2.126-1.716V4h-.6v.719c-1.195.117-2.01.836-2.01 1.853 0 .9.606 1.472 1.613 1.707l.397.098v2.034c-.615-.093-1.022-.43-1.114-.9H5.5zm2.177-2.166c-.59-.137-.91-.416-.91-.836 0-.47.345-.822.915-.925v1.76h-.005zm.692 1.193c.717.166 1.048.435 1.048.91 0 .542-.412.914-1.135.982V8.518l.087.02z"/><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M8 13.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11zm0 .5A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"/></svg>
+                        Tokenomics
+                    </h3>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th>Total Supply</th>
+                                <td><span class="accent-text">100,000,000</span> $YUMI (9 decimals)</td>
+                            </tr>
+                            <tr>
+                                <th>Max Transaction</th>
+                                <td><span class="accent-text">2%</span> of Total Supply</td>
+                            </tr>
+                            <tr>
+                                <th>Max Wallet</th>
+                                <td><span class="accent-text">3%</span> of Total Supply</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card">
+                     <h3 class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-receipt-cutoff mr-2 animated-accent-fill" viewBox="0 0 16 16"><path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zM11.5 4a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1z"/><path d="M2.354.646a.5.5 0 1 0-.708.708L3.293 3H2a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1H6.707L2.354.646zm-.217 1.192L1.414 1.146l-.707.708L2.828 4H14v1H2V4.172L.137 1.838zM15 5.5V14a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V5.5a.5.5 0 0 1 1 0v7.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V5.5a.5.5 0 0 1 1 0z"/></svg>
+                        Fee Structure
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Buy Fee</th>
+                                <th>Sell Fee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Platform Fee</td><td><span class="accent-text">3%</span></td><td><span class="accent-text">3%</span></td></tr>
+                            <tr><td>Rewards Fee</td><td><span class="accent-text">2%</span></td><td><span class="accent-text">2%</span></td></tr>
+                            <tr><td>Liquidity Fee</td><td><span class="accent-text">1%</span></td><td><span class="accent-text">1%</span></td></tr>
+                            <tr><td>Launch Sell Fee</td><td>N/A</td><td><span class="accent-text">7%</span></td></tr>
+                        </tbody>
+                    </table>
+                     <p class="font-semibold accent-text text-center mt-4 text-sm">Developer Fee: 0% — Clean transactions for all holders.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+     <section id="how-to-buy">
+        <div class="content-wrapper">
+            <h2>How to Buy $YUMI</h2>
+            <ol>
+                <li>Create a Monad-Compatible Wallet (e.g., MetaMask configured for Monad).</li>
+                <li>Acquire Monad Test Tokens via an official faucet.</li>
+                <li>Connect your wallet to a Monad DEX (e.g., MonadSwap).</li>
+                <li>Import the $YUMI Contract Address (to be provided).</li>
+                <li>Swap Monad tokens for $YUMI.</li>
+                <li>Hold $YUMI in your wallet to automatically accrue rewards.</li>
+                <li>Visit the $YUMI dApp (link to be provided) to view and claim rewards.</li>
+            </ol>
+        </div>
+    </section>
+
+     <section id="dapp" class="bg-gradient-to-b from-transparent to-black/10">
+        <div class="content-wrapper">
+            <h2>$YUMI Rewards dApp</h2>
+             <p class="text-center max-w-3xl mx-auto mb-10">
+                The dedicated $YUMI dApp provides a seamless interface for managing your $OMEGA rewards. Connect your wallet to access the dashboard.
+            </p>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="card text-center">
+                     <h3 class="accent-text">Connect Wallet</h3>
+                     <p>Supports standard Monad EVM wallets like MetaMask.</p>
+                </div>
+                 <div class="card text-center">
+                     <h3 class="accent-text">View Dashboard</h3>
+                     <p>See your real-time accumulated $OMEGA rewards, updated daily.</p>
+                </div>
+                 <div class="card text-center">
+                     <h3 class="accent-text">Claim Rewards</h3>
+                     <p>Manually claim your rewards in the native Monad token with a single click.</p>
+                </div>
+            </div>
+             <p class="highlight-box mt-10 text-center">Holders are free to claim rewards anytime, avoiding unnecessary gas fees or complex interactions outside the dApp.</p>
+        </div>
+    </section>
+
+    <section id="play-game">
+        <div class="content-wrapper">
+            <h2>Engage & Earn</h2>
+            <p>Experience the $YUMI ecosystem beyond reflections. Click below to play our integrated web game!</p>
+            <a href="Yumi game/index.html" target="_blank" rel="noopener noreferrer" class="play-button">
+                Play Game Now
+            </a>
+        </div>
+    </section>
+
+    <section id="roadmap">
+        <div class="content-wrapper">
+            <h2>Roadmap</h2>
+            <div class="timeline">
+                <div class="timeline-item left">
+                    <div class="timeline-content">
+                        <h3>Phase 1: Testnet Deployment</h3>
+                        <ul>
+                            <li>Token Launch + 40% Burn</li>
+                            <li>Initial Rewards Engine Deployed</li>
+                            <li>Website & Litepaper Launch</li>
+                            <li>Liquidity Locked (Testnet)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="timeline-item right">
+                    <div class="timeline-content">
+                        <h3>Phase 2: dApp Finalization</h3>
+                        <ul>
+                            <li>Rewards Dashboard Live</li>
+                            <li>Public dApp Testing & Feedback</li>
+                            <li>CMC + CG Testnet Listings</li>
+                            <li>Initial Influencer Campaigns</li>
+                        </ul>
+                    </div>
+                </div>
+                 <div class="timeline-item left">
+                    <div class="timeline-content">
+                         <h3>Phase 3: Cross-Chain Expansion</h3>
+                         <ul>
+                            <li>Deploy to Ethereum Mainnet & BSC</li>
+                            <li>Native Token $OMEGA Rewards on New Chains</li>
+                            <li>Exploratory NFT Integration</li>
+                            <li>Establish DAO Governance Voting</li>
+                        </ul>
+                    </div>
+                </div>
+                 <div class="timeline-item right">
+                    <div class="timeline-content">
+                        <h3>Phase 4: Growth & Ecosystem</h3>
+                         <ul>
+                            <li>Mobile App (Viewer/Claimer) Deployment</li>
+                            <li>Launch YUMI DeFi Vaults (Staking, Farming)</li>
+                            <li>Strategic Partnerships & Integrations</li>
+                            <li>Explore Real-World Use Cases</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="security">
+        <div class="content-wrapper">
+            <h2>Security & Transparency</h2>
+            <ul class="security-list grid md:grid-cols-2 gap-x-8 gap-y-4 max-w-3xl mx-auto">
+                <li>Liquidity Locked at Launch (Mainnet)</li>
+                <li>Rewards Contract Audited Pre-Launch</li>
+                <li>Manual Claiming via Secure UI Only</li>
+                <li>Contract Upgradability via Governance</li>
+                <li>Emergency Rescue Functions for Stability</li>
+                <li>Transparent Communication Channels</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="conclusion" class="text-center bg-gradient-to-b from-transparent to-black/20">
+        <div class="content-wrapper">
+            <h2>Conclusion</h2>
+            <p class="max-w-3xl mx-auto text-lg mb-8">
+                $YUMI combines volume-driven growth, user-controlled rewards, and a multi-network vision. By empowering holders to claim $OMEGA rewards in each network’s native token, $YUMI is built for sustainable growth and scalability across Monad, Ethereum, BSC, and beyond.
+            </p>
+            <p class="text-3xl font-semibold accent-text mt-10 tracking-wider">Claim. Earn. Grow.</p>
+            <p class="text-xl font-medium text-light-secondary mt-3">This is just the beginning.</p>
+        </div>
+    </section>
+
+    <section id="comic-viewer">
+        <div class="content-wrapper">
+            <h2>Comic Panels</h2>
+            <div class="flex items-center justify-center">
+                <button id="prevPage" class="px-4 py-2 mr-4 rounded-md animated-accent-bg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-left-circle-fill" viewBox="0 0 16 16">
+                      <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 7.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
+                    </svg>
+                </button>
+                <div class="comic-panel-container">
+                    <!-- Comic panel will be displayed here -->
+                    <img id="comicPanel" src="" alt="Comic Panel" class="max-w-full h-auto" />
+                </div>
+                <button id="nextPage" class="px-4 py-2 ml-4 rounded-md animated-accent-bg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-right-circle-fill" viewBox="0 0 16 16">
+                      <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm4.5 0a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5a.5.5 0 0 0 0 1z"/>
+                    </svg>
+                </button>
+            </div>
+            <p id="pageNumber" class="text-center mt-4">Page 1 of 0</p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="content-wrapper">
+            <p><strong>Official Links Coming Soon:</strong></p>
+            <p class="links text-lg">
+                <span>Website</span> | <span>Rewards Portal</span> | <span>Telegram</span> | <span>Twitter</span> | <span>Contract Address</span>
+            </p>
+            <p class="copyright">&copy; 2025 $YUMI Project. All rights reserved.</p>
+        </div>
+    </footer>
+    <script>
+        const comicPanels = [
+            "comics/example1.png",
+            "comics/example2.png",
+            "comics/example3.png",
+            // Add your comic panel image paths here
+        ];
+        let currentPanelIndex = 0;
+
+        const comicPanelImg = document.getElementById('comicPanel');
+        const pageNumber = document.getElementById('pageNumber');
+        const prevPageButton = document.getElementById('prevPage');
+        const nextPageButton = document.getElementById('nextPage');
+
+        function updateComicPanel() {
+            if (comicPanels.length === 0) {
+                comicPanelImg.src = ""; // clear the image
+                pageNumber.textContent = `No Pages Available`;
+                return;
+            }
+            comicPanelImg.src = comicPanels[currentPanelIndex];
+            pageNumber.textContent = `Page ${currentPanelIndex + 1} of ${comicPanels.length}`;
+        }
+
+        function nextPanel() {
+            currentPanelIndex = (currentPanelIndex + 1) % comicPanels.length;
+            updateComicPanel();
+        }
+
+        function previousPanel() {
+            currentPanelIndex = (currentPanelIndex - 1 + comicPanels.length) % comicPanels.length;
+            updateComicPanel();
+        }
+
+        prevPageButton.addEventListener('click', previousPanel);
+        nextPageButton.addEventListener('click', nextPanel);
+
+        updateComicPanel();
+    </script>
+
+</body>
+</html>
