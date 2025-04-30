@@ -2,6 +2,1754 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Yumi Pop</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&family=Sawarabi+Mincho&display=swap" rel="stylesheet" />
+    <!-- WalletConnect Provider Library -->
+    <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
+    <!-- Socket.IO Client Library -->
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
+    <!-- Game Scripts -->
+    <script src="bubblePatterns.js"></script>
+    <script type="module" src="achievements.js"></script>
+    <script type="module" src="player.js"></script>
+    <script>
+    // Make game objects and classes available globally for bubblePatterns.js
+    window.gameObjects = {
+        bubbles: [],
+        platforms: [],
+        player: null,
+        projectiles: []
+    };
+    window.backpackInventory = {};
+    window.difficultyFactor = 1.0;
+    
+    // Initialize Firebase with your config
+    var firebaseConfig = {
+      apiKey: "AIzaSyAN-37ysgFJlncUZAVH7k79HPSqUZy4FKA",
+      authDomain: "yumi-pop.firebaseapp.com",
+      databaseURL: "https://yumi-pop-default-rtdb.firebaseio.com",
+      projectId: "yumi-pop",
+      storageBucket: "yumi-pop.firebasestorage.app",
+      messagingSenderId: "328717127716",
+      appId: "1:328717127716:web:9c7b5beefda761f8ae48b1",
+      measurementId: "G-HHDJD3F9VY"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    // Wallet Integration
+    let playerWalletAddress = null;
+
+    async function connectWallet() {
+        try {
+            // Check if already connected
+            if (playerWalletAddress) {
+                showGameMessage("Wallet already connected!");
+                return;
+            }
+
+            // Check if MetaMask or other Web3 provider is available
+            if (!window.ethereum) {
+                showGameMessage("Please install MetaMask or another Web3 wallet!");
+                window.open('https://metamask.io/download/', '_blank');
+                return;
+            }
+
+            // Request account access
+            const accounts = await window.ethereum.request({ 
+                method: 'eth_requestAccounts' 
+            });
+
+            playerWalletAddress = accounts[0];
+            const shortAddress = playerWalletAddress.slice(0, 6) + "..." + playerWalletAddress.slice(-4);
+            
+            // Update UI
+            document.getElementById("walletAddressDisplay").innerText = shortAddress;
+            document.getElementById("homeProfileWallet").innerText = "Wallet: " + shortAddress;
+            document.getElementById("connectWalletButton").style.display = "none";
+            document.getElementById("disconnectWalletButton").style.display = "block";
+
+            // Update Firebase record with wallet address
+            if (username) {
+                const leaderboardRef = firebase.database().ref('leaderboard');
+                leaderboardRef.child(username.toLowerCase()).update({
+                    walletAddress: playerWalletAddress.toLowerCase()
+                });
+            }
+
+            showGameMessage("Wallet connected successfully!");
+
+            // Setup event listeners for wallet
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+            window.ethereum.on('chainChanged', handleChainChanged);
+            window.ethereum.on('disconnect', handleDisconnect);
+
+        } catch (error) {
+            console.error("Wallet connect error: ", error);
+            document.getElementById("walletAddressDisplay").innerText = "Connection Failed";
+            showGameMessage("Failed to connect wallet: " + error.message);
+        }
+    }
+
+    async function disconnectWallet() {
+        try {
+            playerWalletAddress = null;
+
+            // Update UI
+            document.getElementById("walletAddressDisplay").innerText = "Not Connected";
+            document.getElementById("homeProfileWallet").innerText = "Wallet: Not Connected";
+            document.getElementById("connectWalletButton").style.display = "block";
+            document.getElementById("disconnectWalletButton").style.display = "none";
+
+            // Update Firebase record
+            if (username) {
+                const leaderboardRef = firebase.database().ref('leaderboard');
+                leaderboardRef.child(username.toLowerCase()).update({
+                    walletAddress: ""
+                });
+            }
+
+            showGameMessage("Wallet disconnected");
+
+            // Remove event listeners
+            if (window.ethereum) {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+                window.ethereum.removeListener('chainChanged', handleChainChanged);
+                window.ethereum.removeListener('disconnect', handleDisconnect);
+            }
+        } catch (error) {
+            console.error("Error disconnecting wallet:", error);
+        }
+    }
+
+    // Wallet event handlers
+    function handleAccountsChanged(accounts) {
+        if (accounts.length === 0) {
+            disconnectWallet();
+        } else if (accounts[0] !== playerWalletAddress) {
+            playerWalletAddress = accounts[0];
+            const shortAddress = playerWalletAddress.slice(0, 6) + "..." + playerWalletAddress.slice(-4);
+            document.getElementById("walletAddressDisplay").innerText = shortAddress;
+            document.getElementById("homeProfileWallet").innerText = "Wallet: " + shortAddress;
+            
+            // Update Firebase record
+            if (username) {
+                const leaderboardRef = firebase.database().ref('leaderboard');
+                leaderboardRef.child(username.toLowerCase()).update({
+                    walletAddress: playerWalletAddress.toLowerCase()
+                });
+            }
+        }
+    }
+
+    function handleChainChanged() {
+        // Reload the page when chain changes
+        window.location.reload();
+    }
+
+    function handleDisconnect() {
+        disconnectWallet();
+    }
+
+    // Add wallet button event listeners
+    document.getElementById("connectWalletButton").addEventListener("click", connectWallet);
+    document.getElementById("disconnectWalletButton").addEventListener("click", disconnectWallet);
+
+    // Check if already connected on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (window.ethereum) {
+            try {
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_accounts' 
+                });
+                if (accounts.length > 0) {
+                    playerWalletAddress = accounts[0];
+                    const shortAddress = playerWalletAddress.slice(0, 6) + "..." + playerWalletAddress.slice(-4);
+                    document.getElementById("walletAddressDisplay").innerText = shortAddress;
+                    document.getElementById("homeProfileWallet").innerText = "Wallet: " + shortAddress;
+                    document.getElementById("connectWalletButton").style.display = "none";
+                    document.getElementById("disconnectWalletButton").style.display = "block";
+                }
+            } catch (error) {
+                console.error("Error checking wallet connection:", error);
+            }
+        }
+    });
+
+    // Mobile Touch Controls
+    let touchControls = {
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+        action: false,
+        special: false
+    };
+
+    function setupTouchControls() {
+        const controls = {
+            moveLeft: document.getElementById('moveLeft'),
+            moveRight: document.getElementById('moveRight'),
+            moveUp: document.getElementById('moveUp'),
+            moveDown: document.getElementById('moveDown'),
+            actionButton: document.getElementById('actionButton'),
+            specialButton: document.getElementById('specialButton')
+        };
+
+        // Helper function to handle touch events
+        function handleTouch(element, action, isStart) {
+            if (!element) return;
+            
+            const handler = (e) => {
+                e.preventDefault();
+                touchControls[action] = isStart;
+                element.style.transform = isStart ? 'scale(0.95)' : 'scale(1)';
+                element.style.background = isStart ? 
+                    (element.classList.contains('action-button') || element.classList.contains('special-button') ?
+                        'rgba(255, 95, 212, 0.4)' : 'rgba(70, 251, 227, 0.4)') :
+                    (element.classList.contains('action-button') || element.classList.contains('special-button') ?
+                        'rgba(255, 95, 212, 0.2)' : 'rgba(70, 251, 227, 0.2)');
+            };
+
+            element.addEventListener('touchstart', e => handler(e, true));
+            element.addEventListener('touchend', e => handler(e, false));
+            element.addEventListener('touchcancel', e => handler(e, false));
+        }
+
+        // Setup touch handlers for each control
+        handleTouch(controls.moveLeft, 'left');
+        handleTouch(controls.moveRight, 'right');
+        handleTouch(controls.moveUp, 'up');
+        handleTouch(controls.moveDown, 'down');
+        handleTouch(controls.actionButton, 'action');
+        handleTouch(controls.specialButton, 'special');
+
+        // Handle multitouch
+        document.addEventListener('touchstart', handleMultiTouch);
+        document.addEventListener('touchmove', handleMultiTouch);
+        document.addEventListener('touchend', handleMultiTouch);
+        document.addEventListener('touchcancel', handleMultiTouch);
+    }
+
+    function handleMultiTouch(e) {
+        e.preventDefault();
+        
+        // Reset all controls
+        Object.keys(touchControls).forEach(key => touchControls[key] = false);
+        
+        // Check each touch point
+        Array.from(e.touches).forEach(touch => {
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (!element) return;
+            
+            // Update controls based on touched elements
+            if (element.closest('#moveLeft')) touchControls.left = true;
+            if (element.closest('#moveRight')) touchControls.right = true;
+            if (element.closest('#moveUp')) touchControls.up = true;
+            if (element.closest('#moveDown')) touchControls.down = true;
+            if (element.closest('#actionButton')) touchControls.action = true;
+            if (element.closest('#specialButton')) touchControls.special = true;
+        });
+    }
+
+    // Update game loop to handle touch controls
+    function updateGameWithTouchControls() {
+        if (!player || gameState !== GameState.PLAYING) return;
+
+        const speed = player.speed * (touchControls.special ? 1.5 : 1);
+
+        if (touchControls.left) player.moveLeft(speed);
+        if (touchControls.right) player.moveRight(speed);
+        if (touchControls.up) player.moveUp(speed);
+        if (touchControls.down) player.moveDown(speed);
+        if (touchControls.action) player.shoot();
+        if (touchControls.special) player.useSpecialAbility();
+    }
+
+    // Add touch controls update to the game loop
+    function gameLoop(timestamp) {
+        if (gameState !== GameState.PLAYING) return;
+        
+        const deltaTime = timestamp - lastFrameTime;
+        lastFrameTime = timestamp;
+
+        // Update game with touch controls if in mobile mode
+        if (document.body.classList.contains('mobile-mode')) {
+            updateGameWithTouchControls();
+        }
+
+        // Update game state
+        updateGame(deltaTime);
+        
+        // Update UI
+        updateUI();
+        
+        // Request next frame
+        requestAnimationFrame(gameLoop);
+    }
+
+    // Update UI function to handle mobile UI
+    function updateUI() {
+        // Update score display
+        document.getElementById('scoreDisplay').textContent = `Score: ${score}`;
+        
+        // Update timer display
+        const timeLeft = Math.max(0, Math.ceil(roundTimer));
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        document.getElementById('timerDisplay').textContent = 
+            `Time: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Update level display
+        document.getElementById('levelDisplay').textContent = `Level: ${currentLevel}`;
+        
+        // Update health bar
+        const healthBar = document.querySelector('.health-fill');
+        if (healthBar) {
+            healthBar.style.width = `${(player.health / player.maxHealth) * 100}%`;
+        }
+        
+        // Update special ability bar
+        const specialBar = document.querySelector('.special-fill');
+        if (specialBar) {
+            specialBar.style.width = `${(player.specialMeter / player.maxSpecialMeter) * 100}%`;
+        }
+    }
+
+    // Handle screen orientation changes
+    function handleOrientationChange() {
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const message = document.getElementById('orientationMessage') || createOrientationMessage();
+        
+        if (window.innerWidth <= 768) {
+            message.style.display = isLandscape ? 'none' : 'block';
+            if (!isLandscape) {
+                pauseGame();
+            } else if (gameState === GameState.PAUSED) {
+                resumeGame();
+            }
+        } else {
+            message.style.display = 'none';
+        }
+    }
+
+    // Add orientation change listener
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('resize', handleOrientationChange);
+
+    // Initialize mobile detection on load
+    document.addEventListener('DOMContentLoaded', () => {
+        updateViewMode();
+        handleOrientationChange();
+    });
+
+    </script>
+    <style>
+        /* Global CSS variables for neon pink/green vibe */
+        :root {
+            --bg-color: #101010;
+            --panel-bg: #2f2f2f;
+            --border-color: #e7e7e7;
+            --accent-color: #46fbe3;
+            --hover-color: #46fbe3;
+            --text-color: #ffffff;
+            --highlight-color: #ff5fd4;
+            --font-anime: 'Bangers', 'Press Start 2P', 'Sawarabi Mincho', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Sawarabi Mincho', serif;
+            font-size: 12px;
+            overflow: hidden;
+            image-rendering: auto;
+        }
+
+        header, main, aside {
+            display: block;
+        }
+
+        button {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(45deg, var(--accent-color), var(--highlight-color));
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            animation: buttonHue 5s linear infinite;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            border-color: var(--highlight-color);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        @keyframes buttonHue {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        /* Hue border animation for key UI elements */
+        #homeScreenContainer, #walletAndStartSection, #profilePreviewSection, #homeLeaderboard, #itemDirectorySection {
+            animation: borderHue 5s linear infinite;
+            border-color: var(--animated-border-color) !important;
+        }
+        /* Home Screen */
+        #startScreen, #cutscene {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-image: url('assets/images/custom-background.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+            border: 4px solid var(--border-color);
+            box-shadow: 0 0 0 8px #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: border 0.5s ease;
+            animation: hueRotate 10s infinite linear;
+        }
+
+        #homeScreenContainer {
+            width: 90%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+            margin: 0 auto;
+            height: calc(100vh - 100px);
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        #mainContent {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 0 0 auto;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #itemDirectorySection {
+            flex: 0 0 auto;
+            margin: 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        #homeLeaderboard {
+            flex: 0 0 auto;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            margin-top: 20px;
+        }
+
+        #homeLeaderboard h3 {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--accent-color);
+            text-align: center;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--accent-color);
+        }
+
+        #homeLeaderboardList {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border: 2px solid var(--accent-color);
+        }
+
+        .leaderboard-entry {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-entry:hover {
+            transform: translateX(5px);
+            background: rgba(0, 0, 0, 0.8);
+            border-color: var(--highlight-color);
+            box-shadow: 0 0 10px var(--highlight-color);
+        }
+
+        .leaderboard-rank {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--highlight-color);
+            font-size: 14px;
+            min-width: 30px;
+        }
+
+        .leaderboard-info {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .leaderboard-player {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .leaderboard-player img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid var(--accent-color);
+        }
+
+        .leaderboard-username {
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .leaderboard-score {
+            color: var(--accent-color);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+        }
+
+        #homeInputSection label, #walletAndStartSection label {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--accent-color);
+        }
+
+        #homeInputSection input, #walletAndStartSection input, #homeInputSection select {
+            padding: 5px;
+            font-size: 12px;
+            border: 2px solid var(--border-color);
+            background-color: var(--panel-bg);
+            color: var(--text-color);
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .info-box {
+            width: 100%;
+            background: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #walletAndStartSection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #profilePreviewSection .profile {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+            #profilePreviewSection .profile img {
+                width: 50px;
+                height: 50px;
+                border: 2px solid var(--accent-color);
+                border-radius: 50%;
+            }
+
+        #profilePreviewSection .profile-info p {
+            margin: 2px 0;
+        }
+
+        #leaderboardAndItemsWrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: 100%;
+        }
+
+        #homeLeaderboard, #itemDirectorySection {
+            flex: 1;
+            min-width: 45%;
+        }
+
+        #homeLeaderboard {
+            width: 100%;
+        }
+
+            #homeLeaderboard h3 {
+                font-family: 'Press Start 2P', cursive;
+                color: var(--accent-color);
+                margin-bottom: 5px;
+            }
+
+        #homeLeaderboardList, #combinedLeaderboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-family: 'Sawarabi Mincho', serif;
+        }
+
+        #itemDirectorySection {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+            #itemDirectorySection h3 {
+                font-family: 'Press Start 2P', cursive;
+                color: var(--accent-color);
+                margin-bottom: 5px;
+            }
+
+        #itemDirectoryListHome {
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border: 2px solid var(--accent-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        /* Main Game UI */
+        #mainContainer {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw;
+            height: 100vh;
+            box-sizing: border-box;
+            display: none;
+            flex-direction: row;
+            gap: 0;
+            padding: 10px;
+        }
+
+            #mainContainer.fullScreen {
+                padding: 0;
+                flex-direction: column;
+            }
+
+                #mainContainer.fullScreen #leftPanel,
+                #mainContainer.fullScreen #sidebar,
+                #coinPanel {
+                    display: none;
+                }
+
+        #topButtons {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px;
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        #mainContainer.fullScreen #topButtons {
+            display: flex;
+        }
+
+        #topButtons button {
+            padding: 8px 15px;
+            font-size: 12px;
+            min-width: 120px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--accent-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        #topButtons button:hover {
+            background: rgba(70, 251, 227, 0.2);
+            transform: scale(1.05);
+        }
+
+        #keyMapOverlay {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--text-color);
+            z-index: 100;
+            transition: all 0.3s ease;
+            max-height: 40px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        #keyMapOverlay:hover {
+            max-height: 200px;
+        }
+
+        #keyMapOverlay h4 {
+            color: var(--accent-color);
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .key {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--accent-color);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: var(--highlight-color);
+            min-width: 20px;
+            text-align: center;
+        }
+
+        #statsBox {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid var(--accent-color);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            color: var(--highlight-color);
+            z-index: 100;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        #backpackHudFullScreen {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        #mainContainer.fullScreen #backpackHudFullScreen {
+            display: flex;
+        }
+
+        /* Hover effects for UI elements */
+        #topButtons:hover,
+        #keyMapOverlay:hover,
+        #backpackHudFullScreen:hover,
+        #statsBox:hover {
+            background: rgba(0, 0, 0, 0.85);
+            transform: scale(1.05);
+        }
+
+        #statsBox:hover {
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        /* Collapsed key map state */
+        #keyMapOverlay::after {
+            content: '⌨️ Controls';
+            display: block;
+            text-align: center;
+            padding: 5px;
+            font-size: 12px;
+            color: var(--accent-color);
+        }
+
+        #keyMapOverlay:hover::after {
+            display: none;
+        }
+
+        /* Game canvas adjustments */
+        #mainContainer.fullScreen #gameCanvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            margin: 0;
+            border: none;
+        }
+
+        /* Ensure UI elements don't interfere with gameplay */
+        #gameArea {
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Mobile-friendly adjustments */
+        @media (max-width: 768px) {
+            #topButtons,
+            #keyMapOverlay,
+            #backpackHudFullScreen,
+            #statsBox {
+                transform: scale(0.8);
+                padding: 8px;
+            }
+
+            #topButtons {
+                right: 10px;
+            }
+
+            #keyMapOverlay {
+                left: 10px;
+            }
+
+            #backpackHudFullScreen {
+                bottom: 10px;
+            }
+        }
+
+        #mainContainer.fullScreen #topButtons button {
+            padding: 8px 12px;
+            font-size: 10px;
+            min-width: 80px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #keyMapOverlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 10px;
+            text-align: left;
+            color: var(--text-color);
+        }
+
+        #keyMapOverlay h4 {
+            margin: 0 0 4px 0;
+            font-size: 10px;
+        }
+
+        #keyMapOverlay p {
+            margin: 2px 0;
+            font-size: 9px;
+        }
+
+        #backpackHudFullScreen {
+            display: none;
+        }
+
+        #mainContainer.fullScreen #backpackHudFullScreen {
+            display: flex;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            gap: 10px;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            align-items: center;
+            z-index: 50;
+        }
+
+        #leftPanel, #sidebar {
+            width: 220px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            padding: 15px;
+            color: var(--text-color);
+            box-shadow: 0 0 15px var(--accent-color);
+            position: relative;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 11px;
+        }
+
+        #sidebar {
+            text-align: center;
+        }
+
+        #sidebar img {
+            display: block;
+            margin: 15px auto;
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .portraitContainer {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid var(--accent-color);
+        }
+
+        .portraitContainer img {
+            width: 180px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            border-radius: 4px;
+        }
+
+        #keyMap {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--accent-color);
+            font-size: 10px;
+            text-align: left;
+            color: var(--highlight-color);
+        }
+
+        #keyMap h4 {
+            margin: 0 0 8px;
+            color: var(--accent-color);
+            text-shadow: 0 0 5px var(--accent-color);
+        }
+
+        /* Add hover effects for interactive elements */
+        #leftPanel button, #sidebar button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--accent-color);
+            color: var(--text-color);
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+        }
+
+        #leftPanel button:hover, #sidebar button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 10px var(--accent-color);
+            transform: translateY(-1px);
+        }
+
+        /* Add dividers between sections */
+        .panel-divider {
+            height: 1px;
+            background: var(--accent-color);
+            margin: 15px 0;
+            box-shadow: 0 0 5px var(--accent-color);
+            opacity: 0.5;
+        }
+
+        #gameArea {
+            flex: 1;
+            background: url('assets/images/canvas-background.png') no-repeat center center;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0;
+            border: 2px solid var(--text-color);
+            box-shadow: 0 0 10px rgba(0,0,255,0.5);
+            position: relative;
+            animation: hueRotate 10s infinite linear;
+            width: 100vw;
+            height: 100vh;
+            border: none;
+        }
+
+        @keyframes hueRotate {
+            0% {
+                filter: hue-rotate(0deg);
+            }
+
+            100% {
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        #statsBox {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: var(--highlight-color);
+            z-index: 60;
+        }
+
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            border: 2px solid var(--accent-color);
+            background-color: #000;
+            box-shadow: 0 0 10px var(--accent-color);
+            image-rendering: pixelated;
+            z-index: 1;
+        }
+
+        #coinPanel {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--panel-bg);
+            color: var(--text-color);
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            font-family: 'Press Start 2P', cursive;
+            z-index: 10;
+        }
+
+        #settingsOverlay {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -20%);
+            background: #444;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: left;
+            border: 2px solid var(--border-color);
+            z-index: 50;
+        }
+
+        #gameOverScreen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #222;
+            color: var(--text-color);
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            display: none;
+            z-index: 100;
+            text-align: center;
+        }
+
+        #roundTransitionOverlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .round-transition-content {
+            text-align: center;
+            font-family: var(--font-anime);
+            color: var(--text-color);
+            text-shadow: 0 0 10px var(--accent-color);
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .round-number {
+            font-size: 72px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, var(--accent-color), var(--highlight-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px var(--accent-color));
+        }
+
+        .round-difficulty {
+            font-size: 36px;
+            color: var(--highlight-color);
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .countdown {
+            font-size: 48px;
+            color: var(--accent-color);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        #backpackGrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 5px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
+            box-shadow: inset 0 0 5px rgba(255,255,255,0.2);
+        }
+
+        .backpack-slot {
+            background: #3c3c3c;
+            color: #333;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 12px;
+            border: 2px solid #f16ce3;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.1s ease;
+            position: relative;
+        }
+
+            .backpack-slot:hover {
+                background: #ddd;
+                transform: scale(1.05);
+            }
+
+            .backpack-slot .slot-number {
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                font-size: 10px;
+                color: #666;
+            }
+
+        .cutscene-collage {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 15px;
+            padding: 30px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            width: 95%;
+            max-width: 1400px;
+            height: 80vh;
+            margin: auto;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 25px rgba(0,0,0,0.8);
+        }
+
+        .cutscene-collage .slide {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border: none;
+            transform: skew(-2deg);
+            transition: transform 0.3s ease;
+        }
+
+        .cutscene-collage .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: contrast(1.1) saturate(1.2);
+            transition: filter 0.3s ease;
+        }
+
+        .cutscene-collage .slide .dialog {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.7) 70%, transparent);
+            color: #fff;
+            padding: 20px 15px;
+            font-family: 'Sawarabi Mincho', serif;
+            font-size: 16px;
+            text-align: left;
+            line-height: 1.4;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cutscene-collage .slide:hover .dialog {
+            opacity: 1;
+        }
+
+        #skipCutscene {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            font-family: 'Sawarabi Mincho', serif;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+            z-index: 101;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #skipCutscene:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        #cutscene {
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(5px);
+        }
+
+        .manga-page-number {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-family: 'Sawarabi Mincho', serif;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            padding: 5px 10px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 2px;
+        }
+
+        @keyframes panelReveal {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .cutscene-collage .slide {
+            animation: panelReveal 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .cutscene-collage .slide:nth-child(1) { animation-delay: 0.1s; }
+        .cutscene-collage .slide:nth-child(2) { animation-delay: 0.2s; }
+        .cutscene-collage .slide:nth-child(3) { animation-delay: 0.3s; }
+        .cutscene-collage .slide:nth-child(4) { animation-delay: 0.4s; }
+        .cutscene-collage .slide:nth-child(5) { animation-delay: 0.5s; }
+
+        .cutscene-collage .slide::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none;
+        }
+
+        .cutscene-collage .slide:hover {
+            transform: skew(-2deg) scale(1.02);
+        }
+
+        .cutscene-collage .slide:nth-child(odd) {
+            transform: skew(2deg);
+        }
+
+        .cutscene-collage .slide:nth-child(odd):hover {
+            transform: skew(2deg) scale(1.02);
+        }
+
+        .cutscene-collage .slide:hover img {
+            filter: contrast(1.2) saturate(1.3);
+        }
+
+        .cutscene-collage .slide:nth-child(odd) .dialog {
+            transform: skew(-2deg);
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: transparent;
+            padding: 10px 0;
+            overflow: hidden;
+            z-index: 150;
+        }
+
+        .animated-banner {
+            display: flex;
+            width: max-content;
+            animation: scrollBanner 20s linear infinite;
+        }
+
+            .animated-banner img {
+                margin: 0 20px;
+                max-height: 50px;
+            }
+
+        @keyframes scrollBanner {
+            0% {
+                transform: translateX(100%);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        #walletVerifyModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        @keyframes glowPulse {
+            0% {
+                box-shadow: 0 0 5px var(--accent-color);
+            }
+
+            50% {
+                box-shadow: 0 0 20px var(--highlight-color);
+            }
+
+            100% {
+                box-shadow: 0 0 5px var(--accent-color);
+            }
+        }
+
+        .hue-border {
+            animation: borderHue 5s linear infinite, glowPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes borderHue {
+            0% {
+                --animated-border-color: hsl(0,100%,60%);
+            }
+
+            25% {
+                --animated-border-color: hsl(120,100%,60%);
+            }
+
+            50% {
+                --animated-border-color: hsl(240,100%,60%);
+            }
+
+            75% {
+                --animated-border-color: hsl(300,100%,60%);
+            }
+
+            100% {
+                --animated-border-color: hsl(360,100%,60%);
+            }
+        }
+
+        .hue-border {
+            animation: borderHue 5s linear infinite;
+            border-color: var(--animated-border-color) !important;
+        }
+
+        /* Item Description Tooltip */
+        .item-tooltip {
+            position: absolute;
+            left: 50%;
+            bottom: 120%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 300px;
+            z-index: 1000;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            animation: tooltipGlow 2s infinite;
+        }
+
+        .backpack-slot:hover .item-tooltip {
+            opacity: 1;
+            visibility: visible;
+            bottom: 130%;
+        }
+
+        @keyframes tooltipGlow {
+            0% { box-shadow: 0 0 10px var(--accent-color); }
+            50% { box-shadow: 0 0 20px var(--highlight-color); }
+            100% { box-shadow: 0 0 10px var(--accent-color); }
+        }
+
+        .item-tooltip-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .item-tooltip-icon {
+            font-size: 32px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid var(--accent-color);
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .item-tooltip-details {
+            flex: 1;
+        }
+
+        .item-tooltip-title {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--highlight-color);
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .item-tooltip-description {
+            font-family: 'Sawarabi Mincho', serif;
+            color: var(--text-color);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .item-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid var(--accent-color);
+        }
+
+        /* Leaderboard Styles */
+        #homeLeaderboardList, #combinedLeaderboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-family: 'Sawarabi Mincho', serif;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease;
+        }
+
+        .leaderboard-entry:hover {
+            transform: scale(1.02);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .leaderboard-rank {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--highlight-color);
+            font-size: 10px;
+            margin-right: 8px;
+        }
+
+        .leaderboard-username {
+            flex: 1;
+            font-weight: bold;
+        }
+
+        .leaderboard-score {
+            color: var(--accent-color);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+        }
+
+        .backpack-slot {
+            position: relative;
+        }
+
+        /* Achievements Styles */
+        .achievements-list {
+            margin: 20px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border: 2px solid var(--accent-color);
+        }
+
+        .achievement-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: var(--highlight-color);
+            text-align: center;
+            animation: achievementGlow 2s infinite;
+        }
+
+        @keyframes achievementGlow {
+            0% { box-shadow: 0 0 5px var(--highlight-color); }
+            50% { box-shadow: 0 0 15px var(--highlight-color); }
+            100% { box-shadow: 0 0 5px var(--highlight-color); }
+        }
+
+        .profile-leaderboard {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .profile-leaderboard h3 {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--accent-color);
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .top-scores {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        /* Item Directory Styles */
+        .item-directory-entry {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .item-directory-entry:hover {
+            transform: translateX(5px);
+            background: rgba(0, 0, 0, 0.6);
+            border-color: var(--highlight-color);
+        }
+
+        .item-icon {
+            font-size: 24px;
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 1px solid var(--accent-color);
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 0; /* Prevents flex item from overflowing */
+        }
+
+        .item-name {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 11px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-description {
+            font-size: 10px;
+            color: var(--text-color);
+            line-height: 1.3;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .item-rarity {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        /* Rarity colors with improved visibility */
+        .common {
+            color: #ffffff;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+        }
+
+        .rare {
+            color: #00ffff;
+            text-shadow: 0 0 4px rgba(0, 255, 255, 0.6);
+        }
+
+        .epic {
+            color: #ff00ff;
+            text-shadow: 0 0 4px rgba(255, 0, 255, 0.6);
+        }
+
+        .legendary {
+            color: #ffd700;
+            text-shadow: 0 0 5px rgba(255, 215, 0, 0.7);
+        }
+
+        /* Improved scrollbar styling */
+        #itemDirectoryListHome::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #itemDirectoryListHome::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        #itemDirectoryListHome::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 3px;
+        }
+
+        #itemDirectoryListHome::-webkit-scrollbar-thumb:hover {
+            background: var(--highlight-color);
+        }
+
+        /* Add hover effect to show full description */
+        .item-directory-entry:hover .item-description {
+            -webkit-line-clamp: unset;
+            position: relative;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 4px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--accent-color);
+            margin-top: 2px;
+        }
+
+        /* Enhanced border animation */
+        @keyframes borderHue {
+            0% { border-color: hsl(320, 100%, 70%); box-shadow: 0 0 20px hsl(320, 100%, 70%); }
+            25% { border-color: hsl(220, 100%, 70%); box-shadow: 0 0 20px hsl(220, 100%, 70%); }
+            50% { border-color: hsl(120, 100%, 70%); box-shadow: 0 0 20px hsl(120, 100%, 70%); }
+            75% { border-color: hsl(40, 100%, 70%); box-shadow: 0 0 20px hsl(40, 100%, 70%); }
+            100% { border-color: hsl(320, 100%, 70%); box-shadow: 0 0 20px hsl(320, 100%, 70%); }
+        }
+
+        .hue-border {
+            animation: borderHue 8s linear infinite;
+            position: relative;
+        }
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Yumi Pop</title>
     <!-- Google Fonts -->
@@ -2552,350 +4300,6 @@
   document.addEventListener('fullscreenchange', updateViewMode);
   document.addEventListener('DOMContentLoaded', updateViewMode);
 </script>
-
-        /* Loading overlay styles */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        .loading-content {
-            text-align: center;
-            color: var(--accent-color);
-            font-family: 'Press Start 2P', cursive;
-        }
-
-        .loading-progress {
-            width: 300px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid var(--accent-color);
-            border-radius: 10px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(45deg, var(--accent-color), var(--highlight-color));
-            transition: width 0.3s ease;
-        }
-
-        .loading-text {
-            font-size: 14px;
-            margin-top: 10px;
-            color: var(--text-color);
-        }
-
-        // Add to the script section
-        async function initializeGame() {
-            // Show loading overlay
-            const loadingOverlay = document.createElement('div');
-            loadingOverlay.className = 'loading-overlay';
-            loadingOverlay.innerHTML = `
-                <div class="loading-content">
-                    <h2>Loading Yumi Pop</h2>
-                    <div class="loading-progress">
-                        <div class="progress-bar"></div>
-                    </div>
-                    <div class="loading-text">Loading assets...</div>
-                </div>
-            `;
-            document.body.appendChild(loadingOverlay);
-
-            const progressBar = loadingOverlay.querySelector('.progress-bar');
-            const loadingText = loadingOverlay.querySelector('.loading-text');
-
-            try {
-                // Initialize Firebase
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                }
-
-                // Load and cache game assets
-                const assets = {
-                    images: [
-                        'assets/images/custom-background.png',
-                        'assets/images/canvas-background.png',
-                        'assets/images/character1_portrait.gif',
-                        'assets/images/character2_portrait.gif',
-                        'assets/images/character3_portrait.gif',
-                        'assets/images/character4_portrait.gif',
-                        'assets/images/character5_portrait.gif',
-                        'assets/images/floor.png',
-                        'assets/images/start_cutscene.png',
-                        'assets/images/boss_cutscene.png'
-                    ],
-                    sounds: [
-                        'assets/sounds/pop.wav',
-                        'assets/sounds/powerup.wav',
-                        'assets/sounds/special.wav',
-                        'assets/sounds/death.wav',
-                        'assets/sounds/bubbleSplit.wav',
-                        'assets/sounds/Backgroundmusic1.wav',
-                        'assets/sounds/Backgroundmusic2.wav',
-                        'assets/sounds/Backgroundmusic3.wav',
-                        'assets/sounds/Backgroundmusic4.wav',
-                        'assets/sounds/bossMusic.wav',
-                        'assets/sounds/homeBgmusic.wav'
-                    ]
-                };
-
-                const totalAssets = assets.images.length + assets.sounds.length;
-                let loadedAssets = 0;
-
-                function updateProgress() {
-                    const progress = (loadedAssets / totalAssets) * 100;
-                    progressBar.style.width = `${progress}%`;
-                    loadingText.textContent = `Loading assets... ${Math.floor(progress)}%`;
-                }
-
-                // Load images
-                await Promise.all(assets.images.map(src => new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        assetCache[src] = img;
-                        loadedAssets++;
-                        updateProgress();
-                        resolve();
-                    };
-                    img.onerror = () => {
-                        console.warn(`Failed to load image: ${src}`);
-                        loadedAssets++;
-                        updateProgress();
-                        resolve();
-                    };
-                    img.src = src;
-                })));
-
-                // Load sounds
-                await Promise.all(assets.sounds.map(src => new Promise((resolve, reject) => {
-                    const audio = new Audio();
-                    audio.oncanplaythrough = () => {
-                        loadedAssets++;
-                        updateProgress();
-                        resolve();
-                    };
-                    audio.onerror = () => {
-                        console.warn(`Failed to load sound: ${src}`);
-                        loadedAssets++;
-                        updateProgress();
-                        resolve();
-                    };
-                    audio.src = src;
-                })));
-
-                // Initialize UI elements
-                document.getElementById('startScreen').style.display = 'flex';
-                populateItemDirectory();
-                setupEventListeners();
-                
-                // Remove loading overlay with fade effect
-                loadingOverlay.style.opacity = '0';
-                setTimeout(() => loadingOverlay.remove(), 500);
-
-            } catch (error) {
-                console.error('Initialization error:', error);
-                loadingText.textContent = 'Error loading game. Please refresh the page.';
-                loadingText.style.color = 'red';
-            }
-        }
-
-        function setupEventListeners() {
-            // Character selection handler
-            document.getElementById('characterSelect').addEventListener('change', function(e) {
-                const portrait = document.getElementById('homeProfilePic');
-                portrait.src = portraitMap[e.target.value];
-            });
-
-            // Username input handler
-            document.getElementById('usernameInput').addEventListener('input', function(e) {
-                const name = e.target.value.trim();
-                document.getElementById('homeProfileUsername').innerText = name ? `Username: ${name}` : 'Username: Guest';
-            });
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Yumi Pop</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&family=Sawarabi+Mincho&display=swap" rel="stylesheet" />
-    <!-- WalletConnect Provider Library -->
-    <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
-    <!-- Socket.IO Client Library -->
-    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
-    <!-- Game Scripts -->
-    <script src="bubblePatterns.js"></script>
-    <script type="module" src="achievements.js"></script>
-    <script type="module" src="player.js"></script>
-    <script>
-    // Initialize Firebase with your config
-    var firebaseConfig = {
-      apiKey: "AIzaSyAN-37ysgFJlncUZAVH7k79HPSqUZy4FKA",
-      authDomain: "yumi-pop.firebaseapp.com",
-      databaseURL: "https://yumi-pop-default-rtdb.firebaseio.com",
-      projectId: "yumi-pop",
-      storageBucket: "yumi-pop.firebasestorage.app",
-      messagingSenderId: "328717127716",
-      appId: "1:328717127716:web:9c7b5beefda761f8ae48b1",
-      measurementId: "G-HHDJD3F9VY"
-    };
-    firebase.initializeApp(firebaseConfig);
-
-    // Wallet Integration
-    let playerWalletAddress = null;
-
-    async function connectWallet() {
-        try {
-            // Check if already connected
-            if (playerWalletAddress) {
-                showGameMessage("Wallet already connected!");
-                return;
-            }
-
-            // Check if MetaMask or other Web3 provider is available
-            if (!window.ethereum) {
-                showGameMessage("Please install MetaMask or another Web3 wallet!");
-                window.open('https://metamask.io/download/', '_blank');
-                return;
-            }
-
-            // Request account access
-            const accounts = await window.ethereum.request({ 
-                method: 'eth_requestAccounts' 
-            });
-
-            playerWalletAddress = accounts[0];
-            const shortAddress = playerWalletAddress.slice(0, 6) + "..." + playerWalletAddress.slice(-4);
-            
-            // Update UI
-            document.getElementById("walletAddressDisplay").innerText = shortAddress;
-            document.getElementById("homeProfileWallet").innerText = "Wallet: " + shortAddress;
-            document.getElementById("connectWalletButton").style.display = "none";
-            document.getElementById("disconnectWalletButton").style.display = "block";
-
-            // Update Firebase record with wallet address
-            if (username) {
-                const leaderboardRef = firebase.database().ref('leaderboard');
-                leaderboardRef.child(username.toLowerCase()).update({
-                    walletAddress: playerWalletAddress.toLowerCase()
-                });
-            }
-
-            showGameMessage("Wallet connected successfully!");
-
-            // Setup event listeners for wallet
-            window.ethereum.on('accountsChanged', handleAccountsChanged);
-            window.ethereum.on('chainChanged', handleChainChanged);
-            window.ethereum.on('disconnect', handleDisconnect);
-
-        } catch (error) {
-            console.error("Wallet connect error: ", error);
-            document.getElementById("walletAddressDisplay").innerText = "Connection Failed";
-            showGameMessage("Failed to connect wallet: " + error.message);
-        }
-    }
-
-    async function disconnectWallet() {
-        try {
-            playerWalletAddress = null;
-
-            // Update UI
-            document.getElementById("walletAddressDisplay").innerText = "Not Connected";
-            document.getElementById("homeProfileWallet").innerText = "Wallet: Not Connected";
-            document.getElementById("connectWalletButton").style.display = "block";
-            document.getElementById("disconnectWalletButton").style.display = "none";
-
-            // Update Firebase record
-            if (username) {
-                const leaderboardRef = firebase.database().ref('leaderboard');
-                leaderboardRef.child(username.toLowerCase()).update({
-                    walletAddress: ""
-                });
-            }
-
-            showGameMessage("Wallet disconnected");
-
-            // Remove event listeners
-            if (window.ethereum) {
-                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-                window.ethereum.removeListener('chainChanged', handleChainChanged);
-                window.ethereum.removeListener('disconnect', handleDisconnect);
-            }
-        } catch (error) {
-            console.error("Error disconnecting wallet:", error);
-        }
-    }
-
-    // Wallet event handlers
-    function handleAccountsChanged(accounts) {
-        if (accounts.length === 0) {
-            disconnectWallet();
-        } else if (accounts[0] !== playerWalletAddress) {
-            playerWalletAddress = accounts[0];
-            const shortAddress = playerWalletAddress.slice(0, 6) + "..." + playerWalletAddress.slice(-4);
-            document.getElementById("walletAddressDisplay").innerText = shortAddress;
-            document.getElementById("homeProfileWallet").innerText = "Wallet: " + shortAddress;
-            
-            // Update Firebase record
-            if (username) {
-                const leaderboardRef = firebase.database().ref('leaderboard');
-                leaderboardRef.child(username.toLowerCase()).update({
-                    walletAddress: playerWalletAddress.toLowerCase()
-                });
-            }
-        }
-    }
-
-    function handleChainChanged() {
-        // Reload the page when chain changes
-        window.location.reload();
-    }
-
-    function handleDisconnect() {
-        disconnectWallet();
-    }
-
-    // Add wallet button event listeners
-    document.getElementById("connectWalletButton").addEventListener("click", connectWallet);
-    document.getElementById("disconnectWalletButton").addEventListener("click", disconnectWallet);
-
-    // Check if already connected on page load
-    document.addEventListener('DOMContentLoaded', async () => {
-        if (window.ethereum) {
-            try {
-                const accounts = await window.ethereum.request({ 
-                    method: 'eth_accounts' 
-                });
-                if (accounts.length > 0) {
-                    playerWalletAddress = accounts[0];
-                    const shortAddress = playerWalletAddress.slice(0, 6) + "..." + playerWalletAddress.slice(-4);
-                    document.getElementById("walletAddressDisplay").innerText = shortAddress;
-                    document.getElementById("homeProfileWallet").innerText = "Wallet: " + shortAddress;
-                    document.getElementById("connectWalletButton").style.display = "none";
-                    document.getElementById("disconnectWalletButton").style.display = "block";
-                }
-            } catch (error) {
-                console.error("Error checking wallet connection:", error);
-            }
-        }
-    });
-    </script>
     <style>
         /* Global CSS variables for neon pink/green vibe */
         :root {
@@ -5075,16 +6479,21 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease;
         }
 
         .loading-content {
             text-align: center;
             color: var(--accent-color);
-            font-family: 'Press Start 2P', cursive;
+            font-family: var(--font-anime);
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.7);
         }
 
         .loading-progress {
-            width: 300px;
+            width: min(300px, 80vw);
             height: 20px;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid var(--accent-color);
@@ -5101,9 +6510,15 @@
         }
 
         .loading-text {
-            font-size: 14px;
+            font-size: min(14px, 3.5vw);
             margin-top: 10px;
             color: var(--text-color);
+        }
+
+        @media (max-width: 768px) {
+            .loading-content h2 {
+                font-size: 5vw;
+            }
         }
 
         // Add to the script section
@@ -5414,175 +6829,351 @@
         <div id="startError" style="color:red; margin-top:10px;"></div>
     </div>
     <!-- Main Game Container -->
-    <div id="mainContainer">
-        <aside id="leftPanel" class="control-panel">
-            <div class="section-header">Profile</div>
-            <div class="section-content">
-                <div id="profileBox" class="info-box">
-                    <div class="profile">
-                        <img id="profilePic" src="assets/images/character1_portrait.gif" alt="Profile Picture" style="width:50px; height:50px; border:2px solid var(--accent-color); border-radius:50%;">
-                        <div class="profile-info">
-                            <p id="profileUsername">Username: </p>
-                            <p id="profileWallet">Wallet: Not Connected</p>
-                            <p id="profileLevel">Level: </p>
-                            <p id="profileTopScore">Top Score: </p>
-                        </div>
-                    </div>
-                    <div class="scoreboard">
-                        <p id="scoreText">Score: 0</p>
-                        <p id="livesText">Lives: 3</p>
-                    </div>
+    <div id="mainContainer" class="game-container">
+        <!-- Mobile Controls -->
+        <div id="mobileControls" class="mobile-controls">
+            <div id="moveLeft" class="control-button left-button">
+                <span>←</span>
+            </div>
+            <div id="moveRight" class="control-button right-button">
+                <span>→</span>
+            </div>
+            <div id="moveUp" class="control-button up-button">
+                <span>↑</span>
+            </div>
+            <div id="moveDown" class="control-button down-button">
+                <span>↓</span>
+            </div>
+            <div id="actionButton" class="control-button action-button">
+                <span>A</span>
+            </div>
+            <div id="specialButton" class="control-button special-button">
+                <span>S</span>
+            </div>
+        </div>
+
+        <!-- Game Canvas -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Mobile Game UI -->
+        <div class="mobile-game-ui">
+            <div class="top-bar">
+                <div id="scoreDisplay">Score: 0</div>
+                <div id="timerDisplay">Time: 0:00</div>
+                <div id="levelDisplay">Level: 1</div>
+            </div>
+            <div class="bottom-bar">
+                <div id="healthBar" class="health-bar">
+                    <div class="health-fill"></div>
+                </div>
+                <div id="specialBar" class="special-bar">
+                    <div class="special-fill"></div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="divider"></div>
+    <style>
+        /* Mobile Controls Styles */
+        .mobile-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: none;
+            justify-content: space-between;
+            padding: 0 20px;
+            pointer-events: none;
+            z-index: 1000;
+        }
 
-            <div class="section-header">Backpack</div>
-            <div class="section-content">
-                <div id="backpackContainer" class="info-box">
-                    <div id="backpackGrid" class="backpack-grid">
-                        <!-- Backpack slots will be dynamically added here -->
+        .mobile-mode .mobile-controls {
+            display: flex;
+        }
+
+        .control-button {
+            width: 60px;
+            height: 60px;
+            background: rgba(70, 251, 227, 0.2);
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+            font-size: 24px;
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .control-button:active {
+            background: rgba(70, 251, 227, 0.4);
+            transform: scale(0.95);
+        }
+
+        .left-button { left: 20px; }
+        .right-button { left: 100px; }
+        .up-button { right: 100px; }
+        .down-button { right: 20px; }
+        .action-button { 
+            bottom: 80px;
+            right: 20px;
+            background: rgba(255, 95, 212, 0.2);
+            border-color: var(--highlight-color);
+        }
+        .special-button {
+            bottom: 80px;
+            right: 100px;
+            background: rgba(255, 95, 212, 0.2);
+            border-color: var(--highlight-color);
+        }
+
+        /* Mobile Game UI Styles */
+        .mobile-game-ui {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            pointer-events: none;
+            z-index: 900;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--text-color);
+            font-family: var(--font-anime);
+            font-size: min(14px, 3.5vw);
+        }
+
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            gap: 10px;
+        }
+
+        .health-bar,
+        .special-bar {
+            height: 20px;
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .health-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff5959, #ff8f8f);
+            transition: width 0.3s ease;
+        }
+
+        .special-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--highlight-color), #ff8fef);
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-game-ui {
+                display: block;
+            }
+            
+            .control-button {
+                width: min(60px, 15vw);
+                height: min(60px, 15vw);
+                font-size: min(24px, 6vw);
+            }
+
+            .bottom-bar {
+                padding-bottom: env(safe-area-inset-bottom, 10px);
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-game-ui {
+                display: none;
+            }
+        }
+    </style>
+
+    <aside id="leftPanel" class="control-panel">
+        <div class="section-header">Profile</div>
+        <div class="section-content">
+            <div id="profileBox" class="info-box">
+                <div class="profile">
+                    <img id="profilePic" src="assets/images/character1_portrait.gif" alt="Profile Picture" style="width:50px; height:50px; border:2px solid var(--accent-color); border-radius:50%;">
+                    <div class="profile-info">
+                        <p id="profileUsername">Username: </p>
+                        <p id="profileWallet">Wallet: Not Connected</p>
+                        <p id="profileLevel">Level: </p>
+                        <p id="profileTopScore">Top Score: </p>
                     </div>
                 </div>
+                <div class="scoreboard">
+                    <p id="scoreText">Score: 0</p>
+                    <p id="livesText">Lives: 3</p>
+                </div>
             </div>
-        </aside>
-        <main id="gameArea">
-            <div id="statsBox">
-              <p id="statsText">Round: 1   Lives: 3   Timer: 25s</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-header">Backpack</div>
+        <div class="section-content">
+            <div id="backpackContainer" class="info-box">
+                <div id="backpackGrid" class="backpack-grid">
+                    <!-- Backpack slots will be dynamically added here -->
+                </div>
             </div>
-            <canvas id="gameCanvas"></canvas>
-            <div id="gameMessage"></div>
-            <div id="roundTransitionOverlay" class="hue-border"></div>
-            <!-- Control panel for game menu – in basic view, its relative positioning makes it appear below the canvas -->
-            <div id="topButtons" class="ui-element">
-              <div class="panel-header">
-                <span class="controls-header">Game Menu</span>
-                <button class="minimize-button" onclick="toggleControlPanel()">▼</button>
-              </div>
-              <div class="section-content">
-                <div class="button-group">
-                  <button id="fsPauseButton">
+        </div>
+    </aside>
+    <main id="gameArea">
+        <div id="statsBox">
+          <p id="statsText">Round: 1   Lives: 3   Timer: 25s</p>
+        </div>
+        <div id="gameMessage"></div>
+        <div id="roundTransitionOverlay" class="hue-border"></div>
+        <!-- Control panel for game menu – in basic view, its relative positioning makes it appear below the canvas -->
+        <div id="topButtons" class="ui-element">
+          <div class="panel-header">
+            <span class="controls-header">Game Menu</span>
+            <button class="minimize-button" onclick="toggleControlPanel()">▼</button>
+          </div>
+          <div class="section-content">
+            <div class="button-group">
+              <button id="fsPauseButton">
+                <span class="key">P</span>
+                <span>Pause</span>
+              </button>
+              <button id="fsSettingsButton">
+                <span class="key">S</span>
+                <span>Settings</span>
+              </button>
+              <button id="fsRestartButton">
+                <span class="key">R</span>
+                <span>Restart</span>
+              </button>
+              <button id="fsHomeButton">
+                <span class="key">H</span>
+                <span>Home</span>
+              </button>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="section-content">
+            <div class="controls-header">Backpack</div>
+            <div class="backpack-grid">
+              <!-- Backpack slots will be populated dynamically -->
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="section-content">
+            <div class="controls-header">Controls</div>
+            <div class="control-item">
+              <span>Move Left</span>
+              <span class="key">A</span>
+            </div>
+            <div class="control-item">
+              <span>Move Right</span>
+              <span class="key">D</span>
+            </div>
+            <div class="control-item">
+              <span>Jump</span>
+              <span class="key">W</span>
+            </div>
+            <div class="control-item">
+              <span>Shoot</span>
+              <span class="key">Space</span>
+            </div>
+            <div class="control-item">
+              <span>Use Item</span>
+              <span class="key">S</span>
+            </div>
+          </div>
+        </div>
+        <div id="backpackHudFullScreen" class="info-box hue-border"></div>
+      </main>
+    <aside id="sidebar" class="control-panel">
+        <div class="section-header">
+            <span>Game Controls</span>
+            <button class="minimize-button">▼</button>
+        </div>
+
+        <div class="section-content">
+            <div class="button-group">
+                <button id="pauseButton">
                     <span class="key">P</span>
                     <span>Pause</span>
-                  </button>
-                  <button id="fsSettingsButton">
+                </button>
+                <button id="settingsButton">
                     <span class="key">S</span>
                     <span>Settings</span>
-                  </button>
-                  <button id="fsRestartButton">
+                </button>
+                <button id="restartGameButton">
                     <span class="key">R</span>
-                    <span>Restart</span>
-                  </button>
-                  <button id="fsHomeButton">
+                    <span>Restart Game</span>
+                </button>
+                <button id="homeScreenButton">
                     <span class="key">H</span>
-                    <span>Home</span>
-                  </button>
-                </div>
-              </div>
-              <div class="divider"></div>
-              <div class="section-content">
-                <div class="controls-header">Backpack</div>
-                <div class="backpack-grid">
-                  <!-- Backpack slots will be populated dynamically -->
-                </div>
-              </div>
-              <div class="divider"></div>
-              <div class="section-content">
-                <div class="controls-header">Controls</div>
-                <div class="control-item">
-                  <span>Move Left</span>
-                  <span class="key">A</span>
-                </div>
-                <div class="control-item">
-                  <span>Move Right</span>
-                  <span class="key">D</span>
-                </div>
-                <div class="control-item">
-                  <span>Jump</span>
-                  <span class="key">W</span>
-                </div>
-                <div class="control-item">
-                  <span>Shoot</span>
-                  <span class="key">Space</span>
-                </div>
-                <div class="control-item">
-                  <span>Use Item</span>
-                  <span class="key">S</span>
-                </div>
-              </div>
+                    <span>Home Screen</span>
+                </button>
             </div>
-            <div id="backpackHudFullScreen" class="info-box hue-border"></div>
-          </main>
-        <aside id="sidebar" class="control-panel">
-            <div class="section-header">
-                <span>Game Controls</span>
-                <button class="minimize-button">▼</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-header">Controls</div>
+        <div class="section-content">
+            <div class="control-item">
+                <span>Move Left</span>
+                <span class="key">A</span>
             </div>
-
-            <div class="section-content">
-                <div class="button-group">
-                    <button id="pauseButton">
-                        <span class="key">P</span>
-                        <span>Pause</span>
-                    </button>
-                    <button id="settingsButton">
-                        <span class="key">S</span>
-                        <span>Settings</span>
-                    </button>
-                    <button id="restartGameButton">
-                        <span class="key">R</span>
-                        <span>Restart Game</span>
-                    </button>
-                    <button id="homeScreenButton">
-                        <span class="key">H</span>
-                        <span>Home Screen</span>
-                    </button>
-                </div>
+            <div class="control-item">
+                <span>Move Right</span>
+                <span class="key">D</span>
             </div>
-
-            <div class="divider"></div>
-
-            <div class="section-header">Controls</div>
-            <div class="section-content">
-                <div class="control-item">
-                    <span>Move Left</span>
-                    <span class="key">A</span>
-                </div>
-                <div class="control-item">
-                    <span>Move Right</span>
-                    <span class="key">D</span>
-                </div>
-                <div class="control-item">
-                    <span>Jump</span>
-                    <span class="key">W</span>
-                </div>
-                <div class="control-item">
-                    <span>Shoot</span>
-                    <span class="key">Space</span>
-                </div>
-                <div class="control-item">
-                    <span>Use Item</span>
-                    <span class="key">S</span>
-                </div>
+            <div class="control-item">
+                <span>Jump</span>
+                <span class="key">W</span>
             </div>
-
-            <div class="divider"></div>
-
-            <div class="section-header">Character</div>
-            <div class="section-content">
-                <div class="portraitContainer">
-                    <img src="assets/images/character1_portrait.gif" alt="Character Portrait" />
-                </div>
+            <div class="control-item">
+                <span>Shoot</span>
+                <span class="key">Space</span>
             </div>
-
-            <div class="divider"></div>
-
-            <div id="achievementLog">
-                <div class="section-header">Achievements</div>
-                <div class="section-content achievements-list"></div>
+            <div class="control-item">
+                <span>Use Item</span>
+                <span class="key">S</span>
             </div>
-        </aside>
-    </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-header">Character</div>
+        <div class="section-content">
+            <div class="portraitContainer">
+                <img src="assets/images/character1_portrait.gif" alt="Character Portrait" />
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div id="achievementLog">
+            <div class="section-header">Achievements</div>
+            <div class="section-content achievements-list"></div>
+        </div>
+    </aside>
     <!-- Coin Panel -->
     <div id="coinPanel" class="hue-border">
         <span id="coinUsername"></span> | Coins: <span id="coinCount">0</span>
@@ -10924,28 +12515,6 @@
             <p>Submit your score to the leaderboard?</p>
             <button id="confirmScoreSubmit">Yes</button>
             <button id="cancelScoreSubmit">No</button>
-        </div>
-    </div>
-    <!-- Mobile Controls Container -->
-    <div id="mobileControls" class="mobile-controls" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 30vh; z-index: 1000;">
-        <div class="control-group left" style="position: absolute; bottom: 20px; left: 20px; display: flex; gap: 10px;">
-            <button class="control-button move-left" aria-label="Move Left" data-action="move-left">
-                <span class="button-icon">←</span>
-            </button>
-            <button class="control-button move-right" aria-label="Move Right" data-action="move-right">
-                <span class="button-icon">→</span>
-            </button>
-        </div>
-        <div class="control-group right" style="position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px;">
-            <button class="control-button jump-button" aria-label="Jump" data-action="jump">
-                <span class="button-icon">↑</span>
-            </button>
-            <button class="control-button shoot-button" aria-label="Shoot" data-action="shoot">
-                <span class="button-icon">•</span>
-            </button>
-            <button class="control-button backpack-button" aria-label="Backpack" data-action="backpack">
-                <span class="button-icon">⚡</span>
-            </button>
         </div>
     </div>
 </body>
